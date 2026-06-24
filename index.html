@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coding for Good — Robot Helper</title>
+  <meta name="description" content="An interactive coding activity for the Junior Coding for Good badge. Learn sequence, loops, and conditionals by guiding a helpful robot through a maze." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>🤖 Coding for Good</h1>
+    <p class="tagline">Help the robot deliver kindness — using <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>!</p>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="Activity steps">
+    <button class="tab is-active" data-target="welcome">Start</button>
+    <!-- level tabs injected here by app.js -->
+    <button class="tab" data-target="pioneers"><span class="tab-num">★</span> Coding Pioneers</button>
+  </nav>
+
+  <main>
+    <!-- WELCOME -->
+    <section id="welcome" class="panel is-active">
+      <div class="welcome-card">
+        <h2>Welcome, Coder!</h2>
+        <p>Computers can only do <em>exactly</em> what you tell them, in <em>exactly</em> the order you say it. The instructions you write are called an <strong>algorithm</strong>.</p>
+        <p>In this activity you'll guide a helpful robot 🤖 through a maze to deliver a care package 🎁 to a friend. <strong>Drag</strong> command blocks into your program, then press <strong>Run</strong> to watch it go!</p>
+        <ol class="steps-list">
+          <li><strong>Step 1 — Sequence:</strong> Put commands in the right order.</li>
+          <li><strong>Step 2 — Loops:</strong> Use <em>Repeat</em> to do less typing.</li>
+          <li><strong>Step 3 — Conditionals:</strong> Use <em>IF / ELSE</em> so the robot can make decisions.</li>
+          <li><strong>★ Coding Pioneers:</strong> Meet women who shaped computer science.</li>
+        </ol>
+        <p class="welcome-note">Each step has <strong>two mazes</strong> — and they get trickier as you go. The ★ mazes are the tough ones!</p>
+        <button class="btn btn-primary btn-big" data-goto="level-0">Start Step 1 →</button>
+      </div>
+    </section>
+
+    <!-- LEVEL panels injected here by app.js, before #pioneers -->
+
+    <!-- PIONEERS -->
+    <section id="pioneers" class="panel">
+      <h2 class="section-title">★ Women Who Code for Good</h2>
+      <p class="section-intro">The first computer program was written by a woman — and women have been leading the way ever since. Meet a few coding pioneers!</p>
+      <div class="card-grid" id="pioneer-cards"></div>
+      <div class="reflect">
+        <h3>You did it! 🎉</h3>
+        <p>You used sequence, loops, and conditionals to write real programs. Now think: <strong>what problem would <em>you</em> like to solve with the help of computers?</strong></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Built for the Girl Scouts <em>Junior Coding for Good</em> — Badge 1: Coding Basics.</p>
+  </footer>
+
+  <!-- Celebration overlay -->
+  <div id="celebrate" class="celebrate" hidden>
+    <div class="celebrate-box">
+      <div class="celebrate-emoji">🎉</div>
+      <h2 id="celebrate-title">Care package delivered!</h2>
+      <p id="celebrate-msg"></p>
+      <div class="celebrate-actions">
+        <button class="btn" id="celebrate-stay">Play again</button>
+        <button class="btn btn-primary" id="celebrate-next">Next step →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
