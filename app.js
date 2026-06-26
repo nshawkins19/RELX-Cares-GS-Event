@@ -161,24 +161,32 @@ const PIONEERS = [
     name: "Ada Lovelace",
     years: "1815 – 1852",
     text: "Ada wrote the very first computer program when she was only 17, creating code for Charles Babbage's early mechanical computer.",
+    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Ada_Lovelace_daguerreotype_by_Antoine_Claudet_1843_-_cropped.png/330px-Ada_Lovelace_daguerreotype_by_Antoine_Claudet_1843_-_cropped.png",
+    link: "https://en.wikipedia.org/wiki/Ada_Lovelace",
   },
   {
     face: "💾",
     name: "Grace Hopper",
     years: "1906 – 1992",
     text: "Grace and her team built some of the first electronic computers, like the room-sized Mark 1. She predicted we'd one day hold powerful computers in our hands.",
+    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Commodore_Grace_M._Hopper%2C_USN_%28covered%29_head_and_shoulders_crop.jpg/330px-Commodore_Grace_M._Hopper%2C_USN_%28covered%29_head_and_shoulders_crop.jpg",
+    link: "https://en.wikipedia.org/wiki/Grace_Hopper",
   },
   {
     face: "🚢",
     name: "Raye Montague",
     years: "1935 – 2018",
     text: "In the 1970s, Raye was the first person to figure out how to design a ship using a computer — then she designed one in less than 24 hours!",
+    img: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Raye_Montague_in_2017.jpg",
+    link: "https://en.wikipedia.org/wiki/Raye_Montague",
   },
   {
     face: "🚀",
     name: "Margaret Hamilton",
     years: "born 1936",
     text: "Margaret wrote the Apollo 11 code that helped astronauts land on the Moon. Her 'in case of emergency' program saved the mission — and she coined the term 'software'.",
+    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Margaret_Hamilton_1995.jpg/330px-Margaret_Hamilton_1995.jpg",
+    link: "https://en.wikipedia.org/wiki/Margaret_Hamilton_(software_engineer)",
   },
 ];
 
@@ -923,11 +931,43 @@ function buildPioneers() {
   PIONEERS.forEach((p) => {
     const card = document.createElement("div");
     card.className = "pioneer";
-    card.innerHTML = `
-      <div class="face">${p.face}</div>
-      <h3>${p.name}</h3>
-      <div class="years">${p.years}</div>
-      <p>${p.text}</p>`;
+
+    // photo above the name, linked to Wikipedia
+    const photo = document.createElement("a");
+    photo.className = "pioneer-photo";
+    photo.href = p.link;
+    photo.target = "_blank";
+    photo.rel = "noopener";
+    const img = document.createElement("img");
+    img.src = p.img;
+    img.alt = `Portrait of ${p.name}`;
+    img.loading = "lazy";
+    // if the image can't load (e.g. offline), fall back to the emoji
+    img.addEventListener("error", () => {
+      const fallback = document.createElement("div");
+      fallback.className = "face";
+      fallback.textContent = p.face;
+      img.replaceWith(fallback);
+    });
+    photo.appendChild(img);
+
+    // name links to Wikipedia
+    const h3 = document.createElement("h3");
+    const nameLink = document.createElement("a");
+    nameLink.href = p.link;
+    nameLink.target = "_blank";
+    nameLink.rel = "noopener";
+    nameLink.textContent = p.name;
+    h3.appendChild(nameLink);
+
+    const years = document.createElement("div");
+    years.className = "years";
+    years.textContent = p.years;
+
+    const para = document.createElement("p");
+    para.textContent = p.text;
+
+    card.append(photo, h3, years, para);
     wrap.appendChild(card);
   });
 }
