@@ -22,27 +22,6 @@ python -m http.server 8000
 # then visit http://localhost:8000
 ```
 
-## Deploy to GitHub Pages
-
-1. Create a new GitHub repository and push these files to it:
-
-   ```bash
-   cd "coding-for-good"
-   git init
-   git add .
-   git commit -m "Coding for Good interactive activity"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/<your-repo>.git
-   git push -u origin main
-   ```
-
-2. On GitHub, go to **Settings → Pages**.
-3. Under **Build and deployment → Source**, choose **Deploy from a branch**.
-4. Pick the **`main`** branch and the **`/ (root)`** folder, then **Save**.
-5. Wait a minute, then visit `https://<your-username>.github.io/<your-repo>/`.
-
-The included `.nojekyll` file tells GitHub Pages to serve the files as-is.
-
 ## Files
 
 | File | Purpose |
