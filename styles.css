@@ -112,6 +112,45 @@ main { max-width: 1080px; margin: 0 auto; padding: 22px 16px 60px; }
 .difficulty.medium { background: #fff2d6; color: #7a5300; }
 .difficulty.hard   { background: #ffe1e1; color: #b32d2d; }
 
+/* ---------- Maze designer (sandbox) ---------- */
+.maze-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+.maze-tool {
+  border: 2px solid var(--purple-light);
+  background: #fff;
+  color: var(--purple);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.08s, background 0.15s;
+}
+.maze-tool:hover { transform: translateY(-1px); }
+.maze-tool.is-active { background: var(--purple); color: #fff; }
+.maze-tool.alt { border-color: #cbb8e3; color: #6b5d7d; }
+.maze-tool.random { border-color: var(--green); color: #3f7a1c; background: #f1fae9; }
+.maze-tool.random:hover { background: var(--green); color: #fff; }
+.maze-tool:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.maze-size {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.size-label { font-weight: 700; color: var(--purple); font-size: 0.9rem; }
+.maze-size .cond-select { border-color: var(--purple-light); padding: 5px 8px; }
+.cell.editable-cell { cursor: pointer; }
+.cell.editable-cell:hover { outline: 3px solid var(--purple-light); outline-offset: -3px; }
+
 /* ---------- Level layout ---------- */
 .level-head { text-align: center; margin-bottom: 18px; }
 .level-head h2 { color: var(--purple); margin: 0 0 6px; font-size: 1.6rem; }
@@ -143,6 +182,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 22px 16px 60px; }
   border-radius: 16px;
   padding: 16px;
   box-shadow: var(--shadow);
+  min-width: 0; /* allow grid/flex columns to shrink so the maze can fit & scroll */
 }
 .box h3 {
   margin: 0 0 12px;
@@ -216,14 +256,73 @@ main { max-width: 1080px; margin: 0 auto; padding: 22px 16px 60px; }
 }
 .cmd-chip:active, .block-head:active { cursor: grabbing; }
 
-/* active drop target highlight */
+/* floating element that follows the pointer/finger while dragging */
+.drag-ghost {
+  position: fixed;
+  z-index: 100;
+  transform: translate(-50%, -130%) rotate(-3deg) scale(1.04);
+  background: var(--purple);
+  color: #fff;
+  font-weight: 700;
+  padding: 9px 15px;
+  border-radius: 10px;
+  box-shadow: 0 12px 26px rgba(76, 40, 110, 0.4);
+  pointer-events: none;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  animation: ghostIn 0.12s ease-out;
+}
+@keyframes ghostIn {
+  from { transform: translate(-50%, -130%) rotate(-3deg) scale(0.7); opacity: 0; }
+  to   { transform: translate(-50%, -130%) rotate(-3deg) scale(1.04); opacity: 1; }
+}
+body.dragging { user-select: none; -webkit-user-select: none; cursor: grabbing; }
+
+/* active drop target highlight (subtle — the insertion line shows the spot) */
 .dropzone.drop-active {
-  outline: 3px dashed var(--purple);
-  outline-offset: 1px;
-  background: #f3e9fc;
+  background: #f6effc;
   border-radius: 10px;
 }
-.block-body.dropzone.drop-active { background: #fff; }
+
+/* the insertion line: shows exactly where the card will land (above/below) */
+.drop-indicator {
+  height: 8px;
+  margin: 3px 2px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--purple-light), var(--purple));
+  box-shadow: 0 0 8px rgba(108, 42, 140, 0.55);
+  animation: indicatorPulse 0.7s ease-in-out infinite;
+  position: relative;
+}
+.drop-indicator::before,
+.drop-indicator::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: translateY(-50%);
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+}
+.drop-indicator::before { left: -2px; border-left: 8px solid var(--purple); }
+.drop-indicator::after  { right: -2px; border-right: 8px solid var(--purple); }
+@keyframes indicatorPulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+.prog-item { transition: opacity 0.12s ease, transform 0.12s ease; }
+/* the card being moved reads as "lifted" */
+.prog-item.is-dragging { opacity: 0.4; transform: scale(0.97); }
+
+/* freshly placed card pops in */
+.prog-item.just-added { animation: cardPop 0.22s ease-out; }
+@keyframes cardPop {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); opacity: 1; }
+}
 .cmd-chip .ico { font-size: 1.05rem; }
 .cmd-chip.is-move  { border-left: 5px solid var(--blue); }
 .cmd-chip.is-turn  { border-left: 5px solid var(--purple-light); }
@@ -343,7 +442,8 @@ main { max-width: 1080px; margin: 0 auto; padding: 22px 16px 60px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: calc(var(--cell) * 0.6);
+  line-height: 1;
 }
 .cell.open { background: var(--open); }
 .cell.wall { background: var(--wall); }
@@ -371,7 +471,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 22px 16px 60px; }
   justify-content: center;
   box-shadow: 0 3px 8px rgba(0,0,0,0.25);
   transition: transform 0.28s ease;
-  font-size: 1.1rem;
+  font-size: calc(var(--cell) * 0.5);
 }
 .robot .body::after { content: "▶"; color: #fff; }
 .robot.crashed .body { background: radial-gradient(circle at 35% 30%, #ff9a9a, #c0392b); animation: shake 0.4s; }
@@ -444,4 +544,34 @@ main { max-width: 1080px; margin: 0 auto; padding: 22px 16px 60px; }
 @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); } }
 .celebrate-emoji { font-size: 3.5rem; }
 .celebrate-box h2 { color: var(--purple); margin: 6px 0; }
-.celebrate-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
+.celebrate-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+
+/* ---------- Touch / small screens ---------- */
+@media (pointer: coarse) {
+  /* bigger grab handles and tap targets for fingers */
+  .grip { font-size: 1.3rem; padding: 0 4px; }
+  .cmd-chip .remove { width: 28px; height: 28px; }
+  .cmd-btn { padding: 14px 12px; }
+}
+
+@media (max-width: 600px) {
+  main { padding: 14px 10px 50px; }
+  .site-header { padding: 18px 12px 10px; }
+  .tagline { font-size: 0.9rem; }
+
+  /* tabs become a horizontal swipe strip instead of a tall wrapped block */
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px;
+  }
+  .tab { flex: 0 0 auto; font-size: 0.9rem; padding: 8px 12px; }
+
+  .box { padding: 12px; border-radius: 14px; }
+  .welcome-card { padding: 20px; }
+  .level-mission { font-size: 0.95rem; }
+  .maze-tool, .size-label, .maze-size .cond-select { font-size: 0.8rem; }
+  .celebrate-box { padding: 22px; }
+}

@@ -32,7 +32,7 @@ const LEVELS = [
     difficulty: "easy",
     mission:
       "A computer does exactly what you say, in exactly the order you say it. " +
-      "<span class='concept'>Drag</span> command blocks into your program, then press Run to deliver the care package 🎁. " +
+      "<span class='concept'>Drag</span> command blocks into your program, then press Run to deliver the cookies 🍪 to the house 🏠. " +
       "The <span class='concept'>order matters</span> — that order is called a sequence!",
     map: [
       "#####",
@@ -96,7 +96,7 @@ const LEVELS = [
     mission:
       "Look for the pattern! The robot climbs a staircase by repeating the <em>same four moves</em> " +
       "again and again: forward, turn right, forward, turn left. Put those moves <em>inside</em> a Repeat loop " +
-      "so you don't have to drag them over and over — then add one last step to reach the 🎁.",
+      "so you don't have to drag them over and over — then add one last step to reach the house 🏠.",
     map: [
       "#######",
       "#RR####",
@@ -324,7 +324,7 @@ function simulate(level, program) {
 
   run(program);
   if (!result.success && !result.crashed) {
-    result.message = "The program finished, but the robot didn't reach the 🎁. Add more steps!";
+    result.message = "The program finished, but the robot didn't reach the house 🏠. Add more steps!";
   }
   return result;
 }
@@ -341,7 +341,6 @@ const TOOL_INFO = {
 };
 
 const games = [];
-let DRAG = null; // {kind:'new'|'move', tool?, id?}
 
 function buildLevelPanel(idx) {
   const level = LEVELS[idx];
@@ -376,7 +375,7 @@ function buildLevelPanel(idx) {
       <div class="box">
         <h3>Maze</h3>
         <div class="stage-wrap"><div class="grid" id="grid-${idx}"></div></div>
-        <p class="legend">🤖 robot &nbsp;•&nbsp; 🎁 deliver here &nbsp;•&nbsp; dark = wall</p>
+        <p class="legend">🤖 robot with cookies 🍪 &nbsp;•&nbsp; 🏠 deliver here &nbsp;•&nbsp; dark = wall</p>
       </div>
     </div>
   `;
@@ -397,20 +396,11 @@ function buildPalette(game) {
     const info = TOOL_INFO[tool];
     const item = document.createElement("div");
     item.className = `cmd-btn ${info.cls}`;
-    item.setAttribute("draggable", "true");
     item.innerHTML = `<span class="ico">${info.ico}</span> ${info.label} <span class="grip">⠿</span>`;
-    item.addEventListener("dragstart", (e) => {
-      DRAG = { kind: "new", tool };
-      e.dataTransfer.effectAllowed = "copy";
-      e.dataTransfer.setData("text/plain", tool);
-    });
-    item.addEventListener("dragend", () => {
-      DRAG = null;
-      clearDropHighlights();
-    });
-    // click = convenient fallback: append to the main program
+    // pointer drag (mouse + touch); click = fallback that appends to the main program
+    makeDragSource(item, () => ({ kind: "new", tool, game, label: info.label }));
     item.addEventListener("click", () => {
-      if (game.playing) return;
+      if (game.playing || justDragged) return;
       game.program.push(makeCommand(tool));
       renderProgram(game);
     });
@@ -429,6 +419,7 @@ function renderProgram(game) {
   } else {
     game.program.forEach((cmd, i) => list.appendChild(renderCommand(game, cmd, game.program, i)));
   }
+  justAddedId = null; // consume: only animate the freshly placed card once
 }
 
 function emptyHint(text) {
@@ -444,9 +435,9 @@ function renderCommand(game, cmd, parentArr, index) {
     const li = document.createElement("li");
     li.className = "cmd-chip prog-item " + (cmd.type === "forward" ? "is-move" : "is-turn");
     li.dataset.id = cmd.id;
-    li.setAttribute("draggable", "true");
+    if (cmd.id === justAddedId) li.classList.add("just-added");
     li.innerHTML = `<span class="grip">⠿</span><span class="ico">${info.ico}</span> ${info.label}`;
-    makeDraggable(game, li, cmd.id);
+    makeDragSource(li.querySelector(".grip"), () => ({ kind: "move", id: cmd.id, game, label: info.label }));
     li.appendChild(removeBtn(game, parentArr, index));
     return li;
   }
@@ -455,18 +446,17 @@ function renderCommand(game, cmd, parentArr, index) {
     const li = document.createElement("li");
     li.className = "block is-repeat prog-item";
     li.dataset.id = cmd.id;
+    if (cmd.id === justAddedId) li.classList.add("just-added");
     const head = document.createElement("div");
     head.className = "block-head";
-    head.setAttribute("draggable", "true");
     head.innerHTML = `<span class="grip">⠿</span>🔁 Repeat`;
-    makeDraggable(game, head, cmd.id);
+    makeDragSource(head.querySelector(".grip"), () => ({ kind: "move", id: cmd.id, game, label: "Repeat" }));
     const input = document.createElement("input");
     input.type = "number";
     input.min = "1";
     input.max = String(MAX_REPEAT);
     input.value = cmd.count;
     input.className = "count-input";
-    input.setAttribute("draggable", "false");
     input.addEventListener("change", () => {
       cmd.count = Math.max(1, Math.min(MAX_REPEAT, parseInt(input.value || "1", 10)));
       input.value = cmd.count;
@@ -485,16 +475,15 @@ function renderCommand(game, cmd, parentArr, index) {
     const li = document.createElement("li");
     li.className = "block is-if prog-item";
     li.dataset.id = cmd.id;
+    if (cmd.id === justAddedId) li.classList.add("just-added");
     const head = document.createElement("div");
     head.className = "block-head";
-    head.setAttribute("draggable", "true");
     head.innerHTML = `<span class="grip">⠿</span>❓ IF `;
-    makeDraggable(game, head, cmd.id);
+    makeDragSource(head.querySelector(".grip"), () => ({ kind: "move", id: cmd.id, game, label: "IF / ELSE" }));
     const sel = document.createElement("select");
     sel.className = "cond-select";
     sel.innerHTML = `<option value="pathAhead">the path ahead is clear</option>`;
     sel.value = cmd.cond;
-    sel.setAttribute("draggable", "false");
     sel.addEventListener("change", () => (cmd.cond = sel.value));
     head.appendChild(sel);
     head.appendChild(removeBtn(game, parentArr, index));
@@ -537,64 +526,11 @@ function removeBtn(game, parentArr, index) {
   return btn;
 }
 
-/* ---------------- Drag-and-drop wiring ---------------- */
-function makeDraggable(game, el, id) {
-  el.addEventListener("dragstart", (e) => {
-    if (game.playing) {
-      e.preventDefault();
-      return;
-    }
-    e.stopPropagation();
-    DRAG = { kind: "move", id };
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", String(id));
-  });
-  el.addEventListener("dragend", (e) => {
-    e.stopPropagation();
-    DRAG = null;
-    clearDropHighlights();
-  });
-}
-
+/* ---------------- Pointer-based drag-and-drop (mouse + touch) ---------------- */
+/* A dropzone simply remembers which command array and game it represents. */
 function wireDropzone(game, el, arr) {
-  el.addEventListener("dragover", (e) => {
-    if (!DRAG || game.playing) return;
-    // block dropping a block into itself / its own children
-    if (DRAG.kind === "move") {
-      const found = findById(game.program, DRAG.id);
-      if (found && ownArrays(found.cmd).has(arr)) return;
-    }
-    e.preventDefault();
-    e.stopPropagation();
-    clearDropHighlights();
-    el.classList.add("drop-active");
-  });
-  el.addEventListener("dragleave", (e) => {
-    if (e.target === el) el.classList.remove("drop-active");
-  });
-  el.addEventListener("drop", (e) => {
-    if (!DRAG || game.playing) return;
-    e.preventDefault();
-    e.stopPropagation();
-    el.classList.remove("drop-active");
-    const idx = dropIndex(el, e.clientY);
-
-    if (DRAG.kind === "new") {
-      arr.splice(idx, 0, makeCommand(DRAG.tool));
-    } else {
-      const found = findById(game.program, DRAG.id);
-      if (!found) return;
-      if (ownArrays(found.cmd).has(arr)) return; // safety
-      let target = idx;
-      // remove from source first
-      const wasSameArr = found.arr === arr;
-      found.arr.splice(found.index, 1);
-      if (wasSameArr && found.index < target) target--;
-      arr.splice(target, 0, found.cmd);
-    }
-    DRAG = null;
-    renderProgram(game);
-  });
+  el._arr = arr;
+  el._game = game;
 }
 
 function dropIndex(container, clientY) {
@@ -610,11 +546,166 @@ function clearDropHighlights() {
   document.querySelectorAll(".dropzone.drop-active").forEach((d) => d.classList.remove("drop-active"));
 }
 
+let pendingDrag = null; // {payloadFn, x, y}
+let activeDrag = null; // {kind, tool?, id?, game, ghost}
+let justDragged = false; // suppress the click that may follow a drag
+let justAddedId = null; // command id to animate (pop-in) on the next render
+let dropIndicatorEl = null; // the insertion line shown while dragging
+const DRAG_THRESHOLD = 6;
+
+function makeDragSource(el, payloadFn) {
+  if (!el) return;
+  el.style.touchAction = "none"; // let us handle the gesture instead of scrolling
+  el.addEventListener("pointerdown", (e) => {
+    if (e.button && e.button !== 0) return;
+    const payload = payloadFn();
+    if (payload.game && payload.game.playing) return;
+    pendingDrag = { payload, x: e.clientX, y: e.clientY };
+  });
+}
+
+function beginDrag(e) {
+  const { payload } = pendingDrag;
+  pendingDrag = null;
+  activeDrag = { ...payload };
+
+  const ghost = document.createElement("div");
+  ghost.className = "drag-ghost";
+  ghost.textContent = payload.label || "block";
+  document.body.appendChild(ghost);
+  activeDrag.ghost = ghost;
+  moveGhost(e);
+  document.body.classList.add("dragging");
+
+  // dim the card being moved so it reads as "lifted"
+  if (activeDrag.kind === "move") {
+    const el = document.querySelector(`#program-${cssId(activeDrag.game.idx)} .prog-item[data-id="${activeDrag.id}"]`);
+    if (el) el.classList.add("is-dragging");
+  }
+}
+
+function cssId(idx) {
+  return idx; // idx is already a safe string/number used in element ids
+}
+
+function moveGhost(e) {
+  if (!activeDrag) return;
+  activeDrag.ghost.style.left = `${e.clientX}px`;
+  activeDrag.ghost.style.top = `${e.clientY}px`;
+}
+
+function zoneUnderPointer(e) {
+  const ghost = activeDrag.ghost;
+  ghost.style.display = "none";
+  const elBelow = document.elementFromPoint(e.clientX, e.clientY);
+  ghost.style.display = "";
+  if (!elBelow) return null;
+  const zone = elBelow.closest(".dropzone");
+  if (!zone || zone._game !== activeDrag.game) return null;
+  if (activeDrag.kind === "move") {
+    const found = findById(activeDrag.game.program, activeDrag.id);
+    if (found && ownArrays(found.cmd).has(zone._arr)) return null;
+  }
+  return zone;
+}
+
+/* show a line at the exact spot the command will be inserted (above/below) */
+function showDropIndicator(zone, idx) {
+  clearDropIndicator();
+  const items = [...zone.querySelectorAll(":scope > .prog-item")];
+  dropIndicatorEl = document.createElement("div");
+  dropIndicatorEl.className = "drop-indicator";
+  if (idx < items.length) zone.insertBefore(dropIndicatorEl, items[idx]);
+  else zone.appendChild(dropIndicatorEl);
+}
+
+function clearDropIndicator() {
+  if (dropIndicatorEl) {
+    dropIndicatorEl.remove();
+    dropIndicatorEl = null;
+  }
+}
+
+function onPointerMove(e) {
+  if (activeDrag) {
+    moveGhost(e);
+    clearDropHighlights();
+    clearDropIndicator(); // measure against clean layout (no indicator)
+    const zone = zoneUnderPointer(e);
+    if (zone) {
+      zone.classList.add("drop-active");
+      showDropIndicator(zone, dropIndex(zone, e.clientY));
+    }
+    e.preventDefault();
+  } else if (pendingDrag) {
+    const dx = e.clientX - pendingDrag.x;
+    const dy = e.clientY - pendingDrag.y;
+    if (dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD) beginDrag(e);
+  }
+}
+
+function onPointerUp(e) {
+  if (!activeDrag) {
+    pendingDrag = null;
+    return;
+  }
+  clearDropIndicator();
+  const zone = zoneUnderPointer(e);
+  if (zone) {
+    const game = activeDrag.game;
+    const arr = zone._arr;
+    const idx = dropIndex(zone, e.clientY);
+    if (activeDrag.kind === "new") {
+      const cmd = makeCommand(activeDrag.tool);
+      arr.splice(idx, 0, cmd);
+      justAddedId = cmd.id;
+    } else {
+      const found = findById(game.program, activeDrag.id);
+      if (found && !ownArrays(found.cmd).has(arr)) {
+        let target = idx;
+        const wasSameArr = found.arr === arr;
+        found.arr.splice(found.index, 1);
+        if (wasSameArr && found.index < target) target--;
+        arr.splice(target, 0, found.cmd);
+        justAddedId = found.cmd.id;
+      }
+    }
+    renderProgram(game);
+  }
+  endDrag();
+}
+
+function endDrag() {
+  if (activeDrag && activeDrag.ghost) activeDrag.ghost.remove();
+  clearDropHighlights();
+  clearDropIndicator();
+  document.body.classList.remove("dragging");
+  document.querySelectorAll(".prog-item.is-dragging").forEach((el) => el.classList.remove("is-dragging"));
+  activeDrag = null;
+  justDragged = true;
+  setTimeout(() => (justDragged = false), 0);
+}
+
+function initDragEngine() {
+  document.addEventListener("pointermove", onPointerMove, { passive: false });
+  document.addEventListener("pointerup", onPointerUp);
+  document.addEventListener("pointercancel", () => {
+    if (activeDrag) {
+      const game = activeDrag.game;
+      endDrag();
+      if (game) renderProgram(game); // restore the dimmed card
+    }
+    pendingDrag = null;
+  });
+}
+
 /* ---------------- Grid rendering ---------------- */
 function renderGrid(game) {
   const { grid, goal } = parseMap(game.level);
   const gridEl = document.getElementById(`grid-${game.idx}`);
   const cols = Math.max(...grid.map((r) => r.length));
+  game.cols = cols;
+  game.rows = grid.length;
   gridEl.style.gridTemplateColumns = `repeat(${cols}, var(--cell))`;
   gridEl.innerHTML = "";
 
@@ -626,9 +717,13 @@ function renderGrid(game) {
       cell.className = "cell " + (ch === "#" ? "wall" : "open");
       if (ch === "G") {
         cell.classList.add("goal");
-        cell.textContent = "🎁";
+        cell.textContent = "🏠";
       }
       if (x === game.level.start.x && y === game.level.start.y) cell.classList.add("start");
+      if (game.editable) {
+        cell.classList.add("editable-cell");
+        cell.addEventListener("click", () => paintCell(game, x, y));
+      }
       game.cells[`${x},${y}`] = cell;
       gridEl.appendChild(cell);
     }
@@ -641,7 +736,21 @@ function renderGrid(game) {
   gridEl.appendChild(robot);
   game.robotEl = robot;
   game.goal = goal;
-  placeRobot(game, game.level.start, false);
+  fitGrid(game);
+}
+
+/* size the cells so the maze fits the visible width (responsive + touch friendly) */
+function fitGrid(game) {
+  const gridEl = document.getElementById(`grid-${game.idx}`);
+  if (!gridEl || !game.cols) return;
+  const wrap = gridEl.parentElement; // .stage-wrap
+  const gap = 3;
+  // available width: the stage wrapper when visible, else a viewport-based guess
+  const avail = wrap && wrap.clientWidth ? wrap.clientWidth : Math.min(window.innerWidth - 48, 520);
+  let cell = Math.floor((avail - (game.cols + 1) * gap) / game.cols);
+  cell = Math.max(16, Math.min(48, cell));
+  gridEl.style.setProperty("--cell", `${cell}px`);
+  if (!game.playing) placeRobot(game, game.level.start, false);
 }
 
 function placeRobot(game, st, crashed) {
@@ -720,7 +829,11 @@ function finishRun(game, result) {
   game.playing = false;
   setButtonsDisabled(game, false);
   if (result.success) {
-    setMsg(game, "ok", "🎉 Delivered! Great algorithm!");
+    if (game.isSandbox) {
+      setMsg(game, "ok", "🎉 It works! The robot delivered the cookies to the house! 🍪🏠");
+      return;
+    }
+    setMsg(game, "ok", "🎉 Cookies delivered! Great algorithm!");
     markTabDone(game.idx);
     showCelebrate(game.idx);
   } else {
@@ -730,12 +843,16 @@ function finishRun(game, result) {
 
 function setButtonsDisabled(game, disabled) {
   ["run", "reset", "clear"].forEach((k) => {
-    document.getElementById(`${k}-${game.idx}`).disabled = disabled;
+    const el = document.getElementById(`${k}-${game.idx}`);
+    if (el) el.disabled = disabled;
   });
   document.querySelectorAll(`#palette-${game.idx} .cmd-btn`).forEach((b) => {
     b.style.opacity = disabled ? "0.5" : "";
     b.style.pointerEvents = disabled ? "none" : "";
   });
+  if (game.isSandbox) {
+    document.querySelectorAll("#maze-tools-sandbox .maze-tool").forEach((b) => (b.disabled = disabled));
+  }
 }
 
 /* ============================================================
@@ -749,6 +866,22 @@ function showPanel(id) {
   const tab = document.querySelector(`.tab[data-target="${id}"]`);
   if (tab) tab.classList.add("is-active");
   window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // re-fit the grid now the panel is visible (cell offsets are only valid when shown)
+  let g = null;
+  if (id.startsWith("level-")) g = games[Number(id.slice(6))];
+  else if (id === "sandbox") g = sandboxGame;
+  activeGame = g;
+  if (g && !g.playing && g.cols) fitGrid(g);
+}
+
+let activeGame = null;
+let resizeTimer = null;
+function onWindowResize() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (activeGame && !activeGame.playing && activeGame.cols) fitGrid(activeGame);
+  }, 120);
 }
 
 function markTabDone(idx) {
@@ -774,7 +907,7 @@ function showCelebrate(idx) {
   const nextId = nextPanelId(idx);
 
   document.getElementById("celebrate-title").textContent =
-    level.difficulty === "hard" ? "Wow — you cracked the hard one! 🏆" : "Care package delivered!";
+    level.difficulty === "hard" ? "Wow — you cracked the hard one! 🏆" : "Cookies delivered! 🍪";
   document.getElementById("celebrate-msg").textContent = CONCEPT_BLURB[level.concept] || "";
   nextBtn.textContent = nextId === "pioneers" ? "Meet the pioneers ★" : "Next maze →";
   nextBtn.onclick = () => {
@@ -820,11 +953,288 @@ function buildLevelShells() {
   });
 }
 
+/* ============================================================
+   Build Your Own Maze (sandbox)
+   ============================================================ */
+let sandboxGame = null;
+const SANDBOX_SIZES = [7, 9, 11, 13, 15];
+const DEFAULT_SANDBOX_SIZE = 9;
+
+const MAZE_TOOLS = [
+  { key: "wall", label: "🧱 Wall" },
+  { key: "path", label: "⬜ Path" },
+  { key: "start", label: "🤖 Robot" },
+  { key: "house", label: "🏠 House" },
+];
+
+function isBorder(x, y, cols, rows) {
+  return x === 0 || y === 0 || x === cols - 1 || y === rows - 1;
+}
+
+function blankGrid(cols, rows) {
+  return Array.from({ length: rows }, (_, y) =>
+    Array.from({ length: cols }, (_, x) => (isBorder(x, y, cols, rows) ? "#" : "."))
+  );
+}
+
+/* a fresh sandbox model: blank maze, robot top-left, house bottom-right */
+function makeSandboxModel(cols, rows) {
+  return {
+    grid: blankGrid(cols, rows),
+    cols,
+    rows,
+    start: { x: 1, y: 1, dir: 1 },
+    goal: { x: cols - 2, y: rows - 2 },
+  };
+}
+
+function setSandboxSize(game, n) {
+  game.sb = makeSandboxModel(n, n);
+  syncSandboxMap(game);
+  renderGrid(game);
+  setMsg(game, "info", `Maze is now ${n} × ${n}. Draw your own, or press 🎲 Random Maze!`);
+}
+
+/* recursive-backtracker maze generator — always fully connected (solvable) */
+function generateMaze(game) {
+  const { cols, rows } = game.sb;
+  const grid = Array.from({ length: rows }, () => Array.from({ length: cols }, () => "#"));
+  const inBounds = (x, y) => x > 0 && y > 0 && x < cols - 1 && y < rows - 1;
+
+  grid[1][1] = ".";
+  const stack = [[1, 1]];
+  const dirs = [[0, -2], [2, 0], [0, 2], [-2, 0]];
+
+  while (stack.length) {
+    const [cx, cy] = stack[stack.length - 1];
+    const options = [];
+    for (const [dx, dy] of dirs) {
+      const nx = cx + dx;
+      const ny = cy + dy;
+      if (inBounds(nx, ny) && grid[ny][nx] === "#") options.push([nx, ny, cx + dx / 2, cy + dy / 2]);
+    }
+    if (options.length === 0) {
+      stack.pop();
+      continue;
+    }
+    const [nx, ny, wx, wy] = options[Math.floor(Math.random() * options.length)];
+    grid[wy][wx] = ".";
+    grid[ny][nx] = ".";
+    stack.push([nx, ny]);
+  }
+
+  game.sb.grid = grid;
+  game.sb.start = { x: 1, y: 1, dir: 1 };
+  game.sb.goal = { x: cols - 2, y: rows - 2 };
+  grid[rows - 2][cols - 2] = "."; // make sure the house sits on a path
+  syncSandboxMap(game);
+  renderGrid(game);
+  setMsg(game, "info", "Here's a random maze! Can you write a program to reach the 🏠?");
+}
+
+/* rebuild level.map (strings, with 'G' at the goal) from the editable grid model */
+function syncSandboxMap(game) {
+  const sb = game.sb;
+  game.level.map = sb.grid.map((row, y) =>
+    row.map((ch, x) => (x === sb.goal.x && y === sb.goal.y ? "G" : ch)).join("")
+  );
+  game.level.start = { x: sb.start.x, y: sb.start.y, dir: sb.start.dir };
+}
+
+function paintCell(game, x, y) {
+  if (game.playing) return;
+  const sb = game.sb;
+  if (isBorder(x, y, sb.cols, sb.rows)) return; // outer ring stays walls so the robot can't leave
+
+  switch (game.tool) {
+    case "wall":
+      if ((x === sb.start.x && y === sb.start.y) || (x === sb.goal.x && y === sb.goal.y)) {
+        setMsg(game, "bad", "Move the 🤖 or 🏠 before drawing a wall there.");
+        return;
+      }
+      sb.grid[y][x] = "#";
+      break;
+    case "path":
+      sb.grid[y][x] = ".";
+      break;
+    case "start":
+      if (x === sb.goal.x && y === sb.goal.y) {
+        setMsg(game, "bad", "The robot and house can't share a square.");
+        return;
+      }
+      sb.grid[y][x] = ".";
+      sb.start.x = x;
+      sb.start.y = y;
+      break;
+    case "house":
+      if (x === sb.start.x && y === sb.start.y) {
+        setMsg(game, "bad", "The robot and house can't share a square.");
+        return;
+      }
+      sb.grid[y][x] = ".";
+      sb.goal = { x, y };
+      break;
+  }
+  syncSandboxMap(game);
+  renderGrid(game); // also re-places the robot
+}
+
+function clearSandboxMaze(game) {
+  const sb = game.sb;
+  for (let y = 1; y < sb.rows - 1; y++) {
+    for (let x = 1; x < sb.cols - 1; x++) sb.grid[y][x] = ".";
+  }
+  syncSandboxMap(game);
+  renderGrid(game);
+  setMsg(game, "info", "Maze cleared — start drawing!");
+}
+
+/* size selector + random maze button (above the paint tools) */
+function buildMazeSize(game) {
+  const wrap = document.getElementById("maze-size-sandbox");
+  wrap.innerHTML = "";
+
+  const label = document.createElement("span");
+  label.className = "size-label";
+  label.textContent = "Maze size:";
+  wrap.appendChild(label);
+
+  const sel = document.createElement("select");
+  sel.className = "cond-select";
+  sel.id = "size-select-sandbox";
+  SANDBOX_SIZES.forEach((n) => {
+    const opt = document.createElement("option");
+    opt.value = String(n);
+    opt.textContent = `${n} × ${n}`;
+    if (n === game.sb.cols) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener("change", () => {
+    if (game.playing) return;
+    setSandboxSize(game, parseInt(sel.value, 10));
+  });
+  wrap.appendChild(sel);
+
+  const rnd = document.createElement("button");
+  rnd.className = "maze-tool random";
+  rnd.textContent = "🎲 Random Maze";
+  rnd.addEventListener("click", () => {
+    if (game.playing) return;
+    generateMaze(game);
+  });
+  wrap.appendChild(rnd);
+}
+
+function buildMazeTools(game) {
+  const wrap = document.getElementById("maze-tools-sandbox");
+  wrap.innerHTML = "";
+
+  MAZE_TOOLS.forEach((t) => {
+    const b = document.createElement("button");
+    b.className = "maze-tool" + (game.tool === t.key ? " is-active" : "");
+    b.textContent = t.label;
+    b.dataset.tool = t.key;
+    b.addEventListener("click", () => {
+      if (game.playing) return;
+      game.tool = t.key;
+      wrap.querySelectorAll(".maze-tool[data-tool]").forEach((x) =>
+        x.classList.toggle("is-active", x.dataset.tool === game.tool)
+      );
+    });
+    wrap.appendChild(b);
+  });
+
+  const turn = document.createElement("button");
+  turn.className = "maze-tool alt";
+  turn.textContent = "↻ Turn robot";
+  turn.addEventListener("click", () => {
+    if (game.playing) return;
+    game.sb.start.dir = (game.sb.start.dir + 1) % 4;
+    syncSandboxMap(game);
+    placeRobot(game, game.level.start, false);
+  });
+  wrap.appendChild(turn);
+
+  const clr = document.createElement("button");
+  clr.className = "maze-tool alt";
+  clr.textContent = "✖ Clear maze";
+  clr.addEventListener("click", () => {
+    if (game.playing) return;
+    clearSandboxMaze(game);
+  });
+  wrap.appendChild(clr);
+}
+
+function buildSandbox() {
+  const panel = document.getElementById("sandbox");
+  panel.innerHTML = `
+    <div class="level-head">
+      <h2>Build Your Own Maze</h2>
+      <span class="difficulty easy">Sandbox</span>
+    </div>
+    <div class="level-mission">
+      Now <span class="concept">you're</span> the maze maker! Choose a <em>size</em>, then pick a tool and click (or tap)
+      squares to draw <em>walls</em> and <em>paths</em>. Place the robot 🤖 where it starts and the house 🏠 where the
+      cookies go — or press <strong>🎲 Random Maze</strong> to make one instantly. Then build a program on the left and
+      press <strong>Run</strong> to test it!
+    </div>
+    <div class="workspace">
+      <div class="box palette">
+        <h3>Commands</h3>
+        <div id="palette-sandbox"></div>
+        <p class="palette-hint">Drag a command into your program. Drag the ⠿ handle to move blocks.</p>
+      </div>
+
+      <div class="box">
+        <h3>Your Program</h3>
+        <div class="builder-target" id="target-sandbox">Drag commands into the area below ↓</div>
+        <ul class="program-list dropzone" id="program-sandbox"></ul>
+        <div class="controls">
+          <button class="btn btn-run" id="run-sandbox">▶ Run</button>
+          <button class="btn" id="reset-sandbox">⟲ Reset robot</button>
+          <button class="btn" id="clear-sandbox">🗑 Clear program</button>
+        </div>
+        <div class="run-msg info" id="msg-sandbox">Draw a maze, build a program, then press Run!</div>
+      </div>
+
+      <div class="box">
+        <h3>Maze Designer</h3>
+        <div class="maze-size" id="maze-size-sandbox"></div>
+        <div class="maze-tools" id="maze-tools-sandbox"></div>
+        <div class="stage-wrap"><div class="grid" id="grid-sandbox"></div></div>
+        <p class="legend">Pick a tool, then click (or tap) a square to draw it.</p>
+      </div>
+    </div>
+  `;
+
+  const game = {
+    idx: "sandbox",
+    isSandbox: true,
+    editable: true,
+    playing: false,
+    program: [],
+    tool: "wall",
+    sb: makeSandboxModel(DEFAULT_SANDBOX_SIZE, DEFAULT_SANDBOX_SIZE),
+    level: { tools: ["forward", "left", "right", "repeat", "if"], start: { x: 1, y: 1, dir: 1 }, map: [] },
+  };
+  sandboxGame = game;
+
+  buildMazeSize(game);
+  buildMazeTools(game);
+  buildPalette(game);
+  syncSandboxMap(game);
+  renderGrid(game);
+  renderProgram(game);
+  wireControls(game);
+}
+
 /* ---------------- Init ---------------- */
 function init() {
+  initDragEngine();
   buildLevelShells();
   LEVELS.forEach((_, idx) => buildLevelPanel(idx));
   buildPioneers();
+  buildSandbox();
 
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => showPanel(tab.dataset.target));
@@ -835,6 +1245,7 @@ function init() {
   document.getElementById("celebrate-stay").addEventListener("click", () => {
     document.getElementById("celebrate").hidden = true;
   });
+  window.addEventListener("resize", onWindowResize);
 }
 
 document.addEventListener("DOMContentLoaded", init);

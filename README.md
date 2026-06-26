@@ -2,7 +2,7 @@
 
 An interactive coding activity that helps kids earn the Girl Scouts **Junior Coding for Good — Badge 1: Coding Basics** badge.
 
-Players guide a helpful robot through a maze to deliver a care package, learning the three core ideas of programming along the way:
+Players guide a helpful robot through a maze to deliver a box of Girl Scout cookies to a customer's house, learning the three core ideas of programming along the way:
 
 1. **Sequence** — put commands in the right order
 2. **Loops** — use a `Repeat` block to do more with less
@@ -10,7 +10,7 @@ Players guide a helpful robot through a maze to deliver a care package, learning
 
 Each step has **two mazes** that get progressively harder — an easier intro maze and a tougher ★ maze (a long zig-zag, a staircase loop, and a full clockwise spiral). Programs are built by **dragging** command blocks into place, reordering them, and nesting them inside loops and conditionals.
 
-It finishes with a **Coding Pioneers** section celebrating women who shaped computer science (Ada Lovelace, Grace Hopper, Raye Montague, Margaret Hamilton).
+It includes a **Coding Pioneers** section celebrating women who shaped computer science (Ada Lovelace, Grace Hopper, Raye Montague, Margaret Hamilton), and ends with a **Build Your Own Maze** sandbox where kids draw their own maze — walls, paths, the robot's start, and the house — then write a program to solve it.
 
 ## Run it locally
 
@@ -40,3 +40,4 @@ python -m http.server 8000
 | 3. Keep your code interesting with conditionals | Level 3 — `IF / ELSE` block |
 | 4. Create your own set of commands that use conditionals | Level 3 — nest commands inside loops and conditionals |
 | 5. Learn about women in computer science | Coding Pioneers section |
+| Bonus — design & test your own | Build Your Own Maze sandbox |

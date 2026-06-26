@@ -11,13 +11,14 @@
 <body>
   <header class="site-header">
     <h1>🤖 Coding for Good</h1>
-    <p class="tagline">Help the robot deliver kindness — using <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>!</p>
+    <p class="tagline">Help the robot deliver Girl Scout cookies 🍪 — using <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>!</p>
   </header>
 
   <nav class="tabs" id="tabs" aria-label="Activity steps">
     <button class="tab is-active" data-target="welcome">Start</button>
     <!-- level tabs injected here by app.js -->
     <button class="tab" data-target="pioneers"><span class="tab-num">★</span> Coding Pioneers</button>
+    <button class="tab" data-target="sandbox"><span class="tab-num">✚</span> Build Your Own</button>
   </nav>
 
   <main>
@@ -26,7 +27,7 @@
       <div class="welcome-card">
         <h2>Welcome, Coder!</h2>
         <p>Computers can only do <em>exactly</em> what you tell them, in <em>exactly</em> the order you say it. The instructions you write are called an <strong>algorithm</strong>.</p>
-        <p>In this activity you'll guide a helpful robot 🤖 through a maze to deliver a care package 🎁 to a friend. <strong>Drag</strong> command blocks into your program, then press <strong>Run</strong> to watch it go!</p>
+        <p>In this activity you'll guide a helpful robot 🤖 through a maze to deliver a box of cookies 🍪 to a customer's house 🏠. <strong>Drag</strong> command blocks into your program, then press <strong>Run</strong> to watch it go!</p>
         <ol class="steps-list">
           <li><strong>Step 1 — Sequence:</strong> Put commands in the right order.</li>
           <li><strong>Step 2 — Loops:</strong> Use <em>Repeat</em> to do less typing.</li>
@@ -48,8 +49,12 @@
       <div class="reflect">
         <h3>You did it! 🎉</h3>
         <p>You used sequence, loops, and conditionals to write real programs. Now think: <strong>what problem would <em>you</em> like to solve with the help of computers?</strong></p>
+        <button class="btn btn-big" data-goto="sandbox">Now build your own maze →</button>
       </div>
     </section>
+
+    <!-- BUILD YOUR OWN (sandbox) — filled in by app.js -->
+    <section id="sandbox" class="panel"></section>
   </main>
 
   <footer class="site-footer">
@@ -60,7 +65,7 @@
   <div id="celebrate" class="celebrate" hidden>
     <div class="celebrate-box">
       <div class="celebrate-emoji">🎉</div>
-      <h2 id="celebrate-title">Care package delivered!</h2>
+      <h2 id="celebrate-title">Cookies delivered! 🍪</h2>
       <p id="celebrate-msg"></p>
       <div class="celebrate-actions">
         <button class="btn" id="celebrate-stay">Play again</button>
