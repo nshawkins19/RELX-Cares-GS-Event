@@ -871,12 +871,20 @@ function fitGrid(game) {
   // message) fits on screen: viewport − chrome above the grid − room below it
   if (game.fitHeight && game.rows) {
     const pod = gridEl.closest(".box");
+    const wrap = gridEl.parentElement; // .stage-wrap
     let hBudget = window.innerHeight * 0.55;
     if (pod && gridEl.offsetParent) {
       const head = document.querySelector(".tabs"); // sticky tab bar covers the top
       const headH = head && getComputedStyle(head).position === "sticky" ? head.offsetHeight : 0;
-      const above = gridEl.getBoundingClientRect().top - pod.getBoundingClientRect().top;
-      hBudget = window.innerHeight - headH - above - 110; // room for sticky bar + legend + Play
+      const podR = pod.getBoundingClientRect();
+      const above = wrap.getBoundingClientRect().top - podR.top;
+      // embedded play: fit ALL of the chrome below the grid (legend + Play +
+      // d-pad) so there's no scrolling; in the Build stage the bottom message
+      // is allowed to sit below the fold.
+      const below = document.body.classList.contains("b2-embed")
+        ? podR.bottom - wrap.getBoundingClientRect().bottom + 6
+        : 110;
+      hBudget = window.innerHeight - headH - above - below;
     }
     const hCell = Math.floor((hBudget - (game.rows + 1) * gap) / game.rows);
     cell = Math.min(cell, hCell);

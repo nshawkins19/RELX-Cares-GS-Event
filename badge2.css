@@ -396,6 +396,41 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 /* cookie collectible (cell, wall, open, key, door, goal come from styles.css) */
 .cell.cookie { background: #fff4c2; }
 
+/* ---------- Share-stage embedded game ---------- */
+.b2-embed-wrap { margin: 12px 0 6px; }
+.b2-embed-frame {
+  width: 100%;
+  height: 580px;
+  border: 2px solid var(--purple-light);
+  border-radius: 16px;
+  background: #faf8ff;
+  display: block;
+}
+.b2-embed-frame[hidden] { display: none; }
+.b2-embed-empty {
+  background: #fffaf0;
+  border: 2px dashed var(--yellow-deep);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #7a5300;
+}
+
+/* "embed" mode: this page loaded inside the Share iframe — show only the game */
+body.b2-embed .site-header,
+body.b2-embed .badge-switch,
+body.b2-embed #tabs,
+body.b2-embed .site-footer,
+body.b2-embed #b2-build > .level-head,
+body.b2-embed #b2-build > .b2-quickstart,
+body.b2-embed #b2-build > .b2-guide,
+body.b2-embed #b2-build #b2-shared-hint,
+body.b2-embed #b2-build [data-b2goto],
+body.b2-embed .b2-game-box > h3 { display: none !important; }
+body.b2-embed { margin: 0; }
+body.b2-embed main { max-width: none; padding: 6px; }
+body.b2-embed .b2-build-workspace { margin-top: 0; gap: 0; }
+body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
+
 /* ---------- Share link box ---------- */
 .b2-share-box {
   display: flex;

@@ -469,8 +469,12 @@ function b2FitGrid() {
   if (pod && g.offsetParent) {
     const head = document.querySelector(".tabs"); // sticky tab bar covers the top
     const headH = head && getComputedStyle(head).position === "sticky" ? head.offsetHeight : 0;
-    const above = g.getBoundingClientRect().top - pod.getBoundingClientRect().top;
-    hBudget = window.innerHeight - headH - above - 110;
+    const podR = pod.getBoundingClientRect();
+    const above = wrap.getBoundingClientRect().top - podR.top;
+    const below = document.body.classList.contains("b2-embed")
+      ? podR.bottom - wrap.getBoundingClientRect().bottom + 6
+      : 110;
+    hBudget = window.innerHeight - headH - above - below;
   }
   const hCell = Math.floor((hBudget - (B2.model.rows + 1) * gap) / B2.model.rows);
   cell = Math.min(cell, hCell);
@@ -679,7 +683,7 @@ function b2PlayerStart() {
   if (!b2FindChar(B2.model.grid, "P")) { b2Msg("bad", "Add a 🤖 robot start — pick the Robot tool and place one!"); return; }
   if (!b2FindChar(B2.model.grid, "H")) { b2Msg("bad", "Add a 🏠 house — pick the House tool and place one!"); return; }
 
-  B2.settings = b2ReadSettings();
+  if (!B2.fromShared) B2.settings = b2ReadSettings(); // shared/embed keeps the creator's title/text
   b2SyncLevel();
 
   b2ps.grid = B2.model.grid.map((r) => r.slice());
@@ -688,21 +692,20 @@ function b2PlayerStart() {
   b2ps.keys = 0; b2ps.cookies = 0;
   b2ps.totalCookies = b2CountChar(B2.model.grid, "C");
 
-  renderGrid(b2game);
-  updateCarry(b2game, 0);
-  placeRobot(b2game, b2ps, false);
-  b2UpdateHud();
-
   b2game.playing = true;
   b2scripts.playing = true;
   b2SetDesignDisabled(true);
   b2SetPlayButtons(true);
 
-  // pick the input that fits the device: on-screen arrows for touch-only
-  // devices, the keyboard for anything with a mouse/trackpad (the same
-  // "when arrow pressed" scripts drive both — no extra programming needed)
+  // show the right input (on-screen arrows for touch, keyboard otherwise) and
+  // the HUD *before* sizing, so the maze fits with them visible — no scrolling.
   const dpad = document.getElementById("b2-dpad");
   if (dpad) dpad.hidden = !b2UsesTouch();
+  b2UpdateHud();
+
+  renderGrid(b2game); // builds the grid and sizes it to fit
+  updateCarry(b2game, 0);
+  placeRobot(b2game, b2ps, false);
   b2Msg("info", "");
 }
 
@@ -727,6 +730,21 @@ function b2PlayerStop() {
   else { b2SyncLevel(); renderGrid(b2game); }
   b2UpdateHud();
   updateCarry(b2game, 0);
+  // for a shared/embedded game, Stop returns to the title + description card
+  if (B2.fromShared) b2SharedWelcome();
+}
+
+/* true when this page is running inside the Share-stage embed iframe */
+function b2IsEmbed() { return document.body.classList.contains("b2-embed"); }
+
+/* the embedded/shared game's start card: title + description + Play */
+function b2SharedWelcome() {
+  b2ShowModal({
+    emoji: "🎮",
+    title: B2.settings.title || B2_DEFAULTS.title,
+    msg: B2.settings.intro || B2_DEFAULTS.intro,
+    actions: [{ label: "▶ Play", primary: true, onClick: () => { b2HideModal(); b2PlayerStart(); } }],
+  });
 }
 
 function b2EndPlay() {
@@ -753,8 +771,10 @@ function b2WinGame() {
     emoji: "🏆", title: "You win!",
     msg: B2.settings.win || B2_DEFAULTS.win,
     actions: B2.fromShared
-      ? [{ label: "↻ Play again", onClick: () => { b2HideModal(); b2PlayerStart(); } },
-         { label: "Make your own →", primary: true, onClick: () => { b2HideModal(); b2ExitShared(); } }]
+      ? (b2IsEmbed()
+          ? [{ label: "↻ Play again", primary: true, onClick: () => { b2HideModal(); b2PlayerStart(); } }]
+          : [{ label: "↻ Play again", onClick: () => { b2HideModal(); b2PlayerStart(); } },
+             { label: "Make your own →", primary: true, onClick: () => { b2HideModal(); b2ExitShared(); } }])
       : [{ label: "Keep building", onClick: () => { b2HideModal(); b2PlayerStop(); } },
          { label: "🔗 Share it", primary: true, onClick: () => { b2HideModal(); b2PlayerStop(); showPanel("b2-share"); } }],
   });
@@ -1014,24 +1034,18 @@ function b2DecodeGame(code) {
   };
 }
 
-function b2MakeShareLink() {
-  if (!b2FindChar(B2.model.grid, "P") || !b2FindChar(B2.model.grid, "H")) {
-    b2Msg("bad", "Add a 🤖 robot and a 🏠 house in Step 4 before sharing!");
-    showPanel("b2-build");
-    return;
-  }
-  const url = `${location.origin}${location.pathname}#play=${b2EncodeGame()}`;
-  document.getElementById("b2-share-link").value = url;
-  document.getElementById("b2-share-result").hidden = false;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(
-      () => b2ShareNote("✅ Link copied! Send it to a friend — they'll play your maze with arrow keys."),
-      () => b2ShareNote("Select the link above and copy it to share your game."));
-  } else {
-    b2ShareNote("Select the link above and copy it to share your game.");
-  }
+/* embed the user's built game (board + the code they wrote) as a playable
+   mini-app: a same-origin iframe that loads this page in "embed" mode with
+   the game encoded in the hash, reusing the whole engine + shared-play flow */
+function b2RefreshEmbed() {
+  const frame = document.getElementById("b2-embed-frame");
+  const empty = document.getElementById("b2-embed-empty");
+  if (!frame || !B2.model) return;
+  const ready = !!(b2FindChar(B2.model.grid, "P") && b2FindChar(B2.model.grid, "H"));
+  frame.hidden = !ready;
+  if (empty) empty.hidden = ready;
+  frame.src = ready ? `${location.pathname}?embed=1#play=${b2EncodeGame()}` : "about:blank";
 }
-function b2ShareNote(text) { const el = document.getElementById("b2-share-note"); if (el) el.textContent = text; }
 
 function b2OpenShared(code) {
   let decoded;
@@ -1049,13 +1063,8 @@ function b2OpenShared(code) {
   b2SyncLevel();
   renderGrid(b2game);
   b2UpdateHud();
-  b2Msg("info", "Use the arrow keys or buttons to solve this maze!");
-  b2ShowModal({
-    emoji: "🎮",
-    title: decoded.settings.title || B2_DEFAULTS.title,
-    msg:   decoded.settings.intro || B2_DEFAULTS.intro,
-    actions: [{ label: "▶ Play", primary: true, onClick: () => { b2HideModal(); b2PlayerStart(); } }],
-  });
+  b2Msg("info", "");
+  b2SharedWelcome(); // title + description + Play
   return true;
 }
 function b2ApplySharedMode(on) {
@@ -1318,16 +1327,12 @@ function b2BuildShare() {
     <div class="b2-intro-card b2-prose">
       <p>The best part of a big project is <strong>sharing</strong> it. When people play your game, you see what they enjoy — and get ideas to make it better. Even after a game comes out, makers keep improving it. That's <em>iteration</em>!</p>
 
-      <h3 style="color:var(--purple);">🔗 Share your game</h3>
-      <p>Make a link your friend can open to play your maze with arrow keys — your rules come along for the ride.</p>
-      <button class="btn btn-primary" id="b2-make-link">🔗 Create share link</button>
-      <div id="b2-share-result" hidden>
-        <div class="b2-share-box">
-          <input type="text" id="b2-share-link" readonly />
-          <button class="btn" id="b2-copy-link">📋 Copy</button>
-        </div>
-        <p class="b2-saved-note" id="b2-share-note"></p>
+      <h3 style="color:var(--purple);">🎮 Your finished game</h3>
+      <p>Here's the game you built — <strong>play it right here!</strong> Use the arrow keys or the on-screen buttons. (It updates whenever you change your game in the Build step.)</p>
+      <div class="b2-embed-wrap">
+        <iframe id="b2-embed-frame" class="b2-embed-frame" title="Your finished game — play it here"></iframe>
       </div>
+      <p class="b2-embed-empty" id="b2-embed-empty" hidden>Add a 🤖 player start and a 🏠 goal in the <strong>Build</strong> step, then come back to play your game here.</p>
 
       <h3 style="color:var(--purple); margin-top:22px;">🧪 Playtest checklist</h3>
       <p>Ask a friend or family member to play. Check off what's true:</p>
@@ -1447,13 +1452,6 @@ function b2WireBuild() {
 }
 
 function b2WireShare() {
-  document.getElementById("b2-make-link").addEventListener("click", b2MakeShareLink);
-  document.getElementById("b2-copy-link").addEventListener("click", () => {
-    const input = document.getElementById("b2-share-link");
-    input.select();
-    if (navigator.clipboard) navigator.clipboard.writeText(input.value);
-    b2ShareNote("✅ Copied! Paste it to a friend.");
-  });
   ["b2-t1", "b2-t2", "b2-t3", "b2-t4", "b2-t5"].forEach((id) =>
     b2AutosaveCheck(document.getElementById(id), `share.${id}`));
   b2Autosave(document.getElementById("b2-improve"), "share.improve");
@@ -1492,11 +1490,19 @@ function b2Init() {
     window.showPanel = function (id) {
       orig(id);
       if (id === "b2-build") requestAnimationFrame(b2FitGrid);
+      if (id === "b2-share") b2RefreshEmbed();
       B2_SESSION.savePlace(id);
       B2_SESSION.markVisited(id);
       b2MarkVisitedTabs();
     };
     window.showPanel._b2wrapped = true;
+  }
+
+  // "embed" mode: this page is loaded inside the Share-stage iframe — strip the
+  // chrome down to just the game, and never write to the shared localStorage
+  if (new URLSearchParams(location.search).has("embed")) {
+    document.body.classList.add("b2-embed");
+    B2.fromShared = true;
   }
 
   tabsNav.querySelectorAll(".tab").forEach((t) => { if (!t.dataset.badge) t.dataset.badge = "1"; });
