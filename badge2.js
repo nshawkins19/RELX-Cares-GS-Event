@@ -99,6 +99,25 @@ const B2_DEFAULT_SIZE = 9;
    Badge 1's (which sits in a narrow column) to fill the space on wide screens */
 const B2_MAX_CELL = 72;
 
+/* ---------------- Themed icons ----------------
+   The player (P), the collected item (C), and the goal (H) can be re-skinned
+   with emoji that fit different themes (ocean cleanup, community garden, pet
+   rescue, space station, helping-hands hospital) — and freely mixed. There's
+   no theme picker; the kid just chooses each icon from a list. The game's
+   mechanics are identical no matter which emoji is chosen. */
+const B2_SKINS = {
+  P: { label: "Player", options: ["🤖", "🤿", "👩‍🌾", "🧑‍🚀", "🧑‍⚕️", "🧑‍🚒"] },
+  C: { label: "Item",   options: ["🍪", "🗑️", "🥕", "🐶", "📦", "💊"] },
+  H: { label: "Goal",   options: ["🏠", "♻️", "🧺", "🐾", "🛰️", "🏥"] },
+};
+const B2_DEFAULT_SKIN = { P: "🤖", C: "🍪", H: "🏠" };
+/* only ever accept icons from the allowed lists (also guards shared links) */
+function b2CleanSkin(obj) {
+  const s = { ...B2_DEFAULT_SKIN };
+  if (obj) for (const k of Object.keys(B2_SKINS)) if (B2_SKINS[k].options.includes(obj[k])) s[k] = obj[k];
+  return s;
+}
+
 /* default game text */
 const B2_DEFAULTS = {
   title: "My Maze Game",
@@ -208,6 +227,7 @@ const B2 = {
   tool: "wall",
   settings: { ...B2_DEFAULTS },
   scripts: B2_DEFAULT_SCRIPTS(),
+  skin: { ...B2_DEFAULT_SKIN },
   fromShared: false,
 };
 
@@ -274,6 +294,14 @@ const B2_SESSION = {
       const arr = JSON.parse(b2Load("session.scripts", "") || "null");
       return Array.isArray(arr) ? arr.map(b2ReviveBlock).filter(Boolean) : null;
     } catch (e) { return null; }
+  },
+  saveSkin() {
+    if (B2.fromShared) return;
+    try { b2Save("session.skin", JSON.stringify(B2.skin)); } catch (e) {}
+  },
+  loadSkin() {
+    try { return b2CleanSkin(JSON.parse(b2Load("session.skin", "") || "null")); }
+    catch (e) { return { ...B2_DEFAULT_SKIN }; }
   },
   savePlace(panel) {
     if (B2.fromShared || !panel) return;
@@ -345,14 +373,83 @@ function b2CountChar(grid, ch) {
 function b2CellVisual(ch) {
   switch (ch) {
     case "#": return { cls: "wall", txt: "" };
-    case "H": return { cls: "open goal", txt: "🏠" };
+    case "H": return { cls: "open goal", txt: B2.skin.H };
     case "K": return { cls: "open key", txt: "🔑" };
     case "D": return { cls: "open door", txt: "🚪" };
     case "B": return { cls: "open block", txt: "📦" };
-    case "C": return { cls: "open cookie", txt: "🍪" };
-    case "P": return { cls: "open start", txt: "🤖" };
+    case "C": return { cls: "open cookie", txt: B2.skin.C };
+    case "P": return { cls: "open start", txt: B2.skin.P };
     default:  return { cls: "open", txt: "" };
   }
+}
+
+/* ---------------- Skin (themed icons) ---------------- */
+/* push the current skin into the play renderer (b2game.emoji) and the
+   robot icon (a CSS var the play robot reads) */
+function b2ApplySkin() {
+  b2game.emoji = { C: B2.skin.C, H: B2.skin.H };
+  const g = document.getElementById("grid-b2");
+  if (g) g.style.setProperty("--b2-player", `"${B2.skin.P}"`);
+}
+/* paint-tool buttons, with the themed icons for player / item / goal / key / door */
+function b2ToolsHTML() {
+  const skinLabel = { robot: `${B2.skin.P} Player`, cookie: `${B2.skin.C} Item`, house: `${B2.skin.H} Goal` };
+  return B2_TOOLS.map((t) =>
+    `<button class="maze-tool" data-b2tool="${t.key}">${skinLabel[t.key] || t.label}</button>`).join("");
+}
+function b2RenderTools() {
+  const el = document.getElementById("b2-tools");
+  if (el) el.innerHTML = b2ToolsHTML();
+  document.querySelectorAll("#b2-tools [data-b2tool]").forEach((x) =>
+    x.classList.toggle("is-active", x.dataset.b2tool === B2.tool));
+}
+function b2RenderLegend() {
+  const el = document.getElementById("b2-legend");
+  if (el) el.innerHTML =
+    `${B2.skin.P} player &nbsp;•&nbsp; ${B2.skin.H} goal &nbsp;•&nbsp; ${B2.skin.C} item &nbsp;•&nbsp; 🔑 key &nbsp;•&nbsp; 🚪 door &nbsp;•&nbsp; 📦 block &nbsp;•&nbsp; dark = wall`;
+}
+/* "when robot touches …" options, with the themed icons */
+function b2TouchTileOpts() {
+  return [
+    { key: "C", label: `${B2.skin.C} item` },
+    { key: "K", label: "🔑 key" },
+    { key: "D", label: "🚪 door" },
+    { key: "B", label: "📦 block" },
+    { key: "H", label: `${B2.skin.H} goal` },
+  ];
+}
+/* fill the icon-picker dropdowns and keep them in sync with B2.skin */
+function b2RenderSkinSelectors() {
+  Object.keys(B2_SKINS).forEach((role) => {
+    const sel = document.getElementById(`b2-skin-${role}`);
+    if (!sel) return;
+    sel.innerHTML = B2_SKINS[role].options
+      .map((e) => `<option value="${e}"${e === B2.skin[role] ? " selected" : ""}>${e}</option>`).join("");
+    sel.value = B2.skin[role];
+  });
+}
+/* called after any icon change: refresh everything that shows an icon + save */
+/* palette block label — the "if all … collected" block shows the item icon */
+function b2PaletteLabel(type) {
+  if (type === "ifCookies") return `if all ${B2.skin.C} collected`;
+  return BLOCK_DEFS[type].label;
+}
+/* re-skin the (wired-once) palette block labels after an icon change */
+function b2RefreshPaletteLabels() {
+  document.querySelectorAll("#b2-scripts-palette [data-pal]").forEach((el) => {
+    const span = el.querySelector(".b2-pal-text");
+    if (span) span.textContent = b2PaletteLabel(el.dataset.pal);
+  });
+}
+function b2OnSkinChange() {
+  b2ApplySkin();
+  b2RenderTools();
+  b2RenderLegend();
+  b2RenderSkinSelectors();
+  b2RefreshPaletteLabels();
+  if (!B2.fromShared) b2RenderEditor();
+  b2RenderScripts();   // refresh the "when robot touches …" labels on placed blocks
+  B2_SESSION.saveSkin();
 }
 
 /* ============================================================
@@ -365,8 +462,17 @@ function b2FitGrid() {
   const gap = 3;
   const avail = wrap && wrap.clientWidth ? wrap.clientWidth : Math.min(window.innerWidth - 48, 520);
   let cell = Math.floor((avail - (B2.model.cols + 1) * gap) / B2.model.cols);
-  // also cap by viewport height so the whole maze fits on screen without scrolling
-  const hCell = Math.floor((window.innerHeight * 0.6 - (B2.model.rows + 1) * gap) / B2.model.rows);
+  // also cap by height so the whole "Your game" pod (minus the bottom message)
+  // fits: viewport − chrome above the grid − room below it (legend + Play)
+  const pod = g.closest(".box");
+  let hBudget = window.innerHeight * 0.55;
+  if (pod && g.offsetParent) {
+    const head = document.querySelector(".tabs"); // sticky tab bar covers the top
+    const headH = head && getComputedStyle(head).position === "sticky" ? head.offsetHeight : 0;
+    const above = g.getBoundingClientRect().top - pod.getBoundingClientRect().top;
+    hBudget = window.innerHeight - headH - above - 110;
+  }
+  const hCell = Math.floor((hBudget - (B2.model.rows + 1) * gap) / B2.model.rows);
   cell = Math.min(cell, hCell);
   cell = Math.max(16, Math.min(B2_MAX_CELL, cell));
   g.style.setProperty("--cell", `${cell}px`);
@@ -666,7 +772,7 @@ function b2UpdateHud() {
   if (!hud) return;
   if (!b2game.playing) { hud.hidden = true; return; }
   const parts = [];
-  if (b2ps.totalCookies > 0) parts.push(`🍪 ${b2ps.cookies} / ${b2ps.totalCookies}`);
+  if (b2ps.totalCookies > 0) parts.push(`${B2.skin.C} ${b2ps.cookies} / ${b2ps.totalCookies}`);
   if (b2ps.keys > 0) parts.push(`🔑 ×${b2ps.keys}`);
   if (parts.length) { hud.hidden = false; hud.innerHTML = parts.map((p) => `<span>${p}</span>`).join(""); }
   else hud.hidden = true;
@@ -690,8 +796,9 @@ function b2RenderScripts() {
         const def = BLOCK_DEFS[type];
         const item = document.createElement("div");
         item.className = `cmd-btn b2-pal ${cat.cls}`;
-        item.innerHTML = `<span class="b2-pal-text">${def.label}</span><span class="grip">⠿</span>`;
-        makeDragSource(item, () => ({ kind: "new", tool: type, game: b2scripts, label: def.label }));
+        item.dataset.pal = type;
+        item.innerHTML = `<span class="b2-pal-text">${b2PaletteLabel(type)}</span><span class="grip">⠿</span>`;
+        makeDragSource(item, () => ({ kind: "new", tool: type, game: b2scripts, label: b2PaletteLabel(type) }));
         item.addEventListener("click", () => {
           if (b2scripts.playing || justDragged) return;
           B2.scripts.push(b2MakeBlock(type));
@@ -808,7 +915,7 @@ function b2BlockFace(block, container) {
   switch (block.type) {
     case "whenPlay":  txt("when ▶ Play is clicked"); break;
     case "whenKey":   txt("when"); sel(DIR_OPTS, block.dir, (v) => (block.dir = v)); txt("arrow pressed (key or arrow pad)"); break;
-    case "whenTouch": txt("when the robot touches a"); sel(TOUCH_TILES, block.tile, (v) => (block.tile = v)); break;
+    case "whenTouch": txt("when the robot touches a"); sel(b2TouchTileOpts(), block.tile, (v) => (block.tile = v)); break;
     case "move":      txt("move"); sel(DIR_OPTS, block.dir, (v) => (block.dir = v)); break;
     case "collect":   txt("pick it up 🎒"); break;
     case "openDoor":  txt("open the door 🔓"); break;
@@ -827,7 +934,7 @@ function b2BlockFace(block, container) {
       break;
     }
     case "ifKey":     txt("if carrying a 🔑 key"); break;
-    case "ifCookies": txt("if every 🍪 is collected"); break;
+    case "ifCookies": txt(`if every ${B2.skin.C} is collected`); break;
   }
 }
 
@@ -851,6 +958,7 @@ function b2EncodeGame() {
     c: B2.model.cols, r: B2.model.rows,
     g: B2.model.grid.map((row) => row.join("")),
     s: B2.scripts.map(b2StripBlock),
+    k: B2.skin,
   };
   return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
 }
@@ -902,6 +1010,7 @@ function b2DecodeGame(code) {
     model:    { cols: data.c, rows: data.r, grid: data.g.map((r) => r.split("")) },
     settings: { title: data.t, intro: data.i, win: data.w },
     scripts,
+    skin: b2CleanSkin(data.k),
   };
 }
 
@@ -931,9 +1040,12 @@ function b2OpenShared(code) {
   B2.model    = decoded.model;
   B2.settings = decoded.settings;
   B2.scripts  = decoded.scripts;
+  B2.skin     = decoded.skin;
   b2SwitchBadge(2);
   showPanel("b2-build");
   b2ApplySharedMode(true);
+  b2ApplySkin();
+  b2RenderLegend();
   b2SyncLevel();
   renderGrid(b2game);
   b2UpdateHud();
@@ -957,7 +1069,12 @@ function b2ApplySharedMode(on) {
 function b2ExitShared() {
   B2.fromShared = false;
   B2.scripts = B2_DEFAULT_SCRIPTS();
+  B2.skin = B2_SESSION.loadSkin();
   b2ApplySharedMode(false);
+  b2ApplySkin();
+  b2RenderTools();
+  b2RenderLegend();
+  b2RenderSkinSelectors();
   b2RenderScripts();
   if (location.hash.startsWith("#play=")) history.replaceState(null, "", location.pathname);
   b2SetSize(B2_DEFAULT_SIZE);
@@ -1083,7 +1200,6 @@ function b2BuildPlan() {
 }
 
 function b2BuildBuild() {
-  const tools = B2_TOOLS.map((t) => `<button class="maze-tool" data-b2tool="${t.key}">${t.label}</button>`).join("");
   const sizes = B2_SIZES.map((n) => `<option value="${n}"${n === B2_DEFAULT_SIZE ? " selected" : ""}>${n} × ${n}</option>`).join("");
   return `
     <div class="level-head"><h2>Step 4 — Build &amp; Test</h2><span class="difficulty medium">Make it real</span></div>
@@ -1146,12 +1262,18 @@ function b2BuildBuild() {
               <button class="maze-tool random" id="b2-random">🎲 Random</button>
               <button class="maze-tool alt" id="b2-clear-maze">✖ Clear</button>
             </div>
-            <div class="maze-tools" id="b2-tools">${tools}</div>
+            <div class="maze-tools" id="b2-tools">${b2ToolsHTML()}</div>
+            <div class="b2-skins" id="b2-skins">
+              <span class="size-label">Icons:</span>
+              <label>Player <select class="cond-select" id="b2-skin-P"></select></label>
+              <label>Item <select class="cond-select" id="b2-skin-C"></select></label>
+              <label>Goal <select class="cond-select" id="b2-skin-H"></select></label>
+            </div>
           </div>
         </div>
         <div class="b2-hud" id="b2-hud" hidden></div>
         <div class="stage-wrap"><div class="grid" id="grid-b2"></div></div>
-        <p class="legend">🤖 robot &nbsp;•&nbsp; 🏠 house &nbsp;•&nbsp; 🍪 cookie &nbsp;•&nbsp; 🔑 key &nbsp;•&nbsp; 🚪 door &nbsp;•&nbsp; 📦 block &nbsp;•&nbsp; dark = wall</p>
+        <p class="legend" id="b2-legend"></p>
         <div class="controls" style="margin-top:10px;">
           <button class="btn btn-run" id="b2-play">▶ Play</button>
           <button class="btn" id="b2-stop" disabled>⏹ Stop</button>
@@ -1243,16 +1365,32 @@ const B2_TABS = [
 ];
 
 function b2WireBuild() {
-  document.querySelectorAll("#b2-tools [data-b2tool]").forEach((b) => {
-    if (b.dataset.b2tool === B2.tool) b.classList.add("is-active");
-    b.addEventListener("click", () => {
+  // delegated tool-pick handler (survives re-rendering the tools on icon change)
+  const toolsEl = document.getElementById("b2-tools");
+  toolsEl.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-b2tool]");
+    if (!b || b2game.playing) return;
+    B2.tool = b.dataset.b2tool;
+    toolsEl.querySelectorAll("[data-b2tool]").forEach((x) =>
+      x.classList.toggle("is-active", x.dataset.b2tool === B2.tool));
+    if (!B2.fromShared) b2RenderEditor();
+  });
+  toolsEl.querySelectorAll("[data-b2tool]").forEach((x) =>
+    x.classList.toggle("is-active", x.dataset.b2tool === B2.tool));
+
+  // icon pickers (player / item / goal / key / door)
+  Object.keys(B2_SKINS).forEach((role) => {
+    const sel = document.getElementById(`b2-skin-${role}`);
+    if (sel) sel.addEventListener("change", () => {
       if (b2game.playing) return;
-      B2.tool = b.dataset.b2tool;
-      document.querySelectorAll("#b2-tools [data-b2tool]").forEach((x) =>
-        x.classList.toggle("is-active", x.dataset.b2tool === B2.tool));
-      if (!B2.fromShared) b2RenderEditor();
+      if (B2_SKINS[role].options.includes(sel.value)) B2.skin[role] = sel.value;
+      b2OnSkinChange();
     });
   });
+  b2RenderSkinSelectors();
+  b2ApplySkin();
+  b2RenderTools();
+  b2RenderLegend();
   document.getElementById("b2-size").addEventListener("change", (e) => {
     if (!b2game.playing) b2SetSize(parseInt(e.target.value, 10));
   });
@@ -1402,6 +1540,7 @@ function b2Init() {
   B2.model = B2_SESSION.loadModel() || { cols: B2_DEFAULT_SIZE, rows: B2_DEFAULT_SIZE, grid: b2Blank(B2_DEFAULT_SIZE, B2_DEFAULT_SIZE) };
   const savedScripts = B2_SESSION.loadScripts();
   if (savedScripts) B2.scripts = savedScripts;
+  B2.skin = B2_SESSION.loadSkin();
 
   b2WireBuild();
   b2WireShare();

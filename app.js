@@ -810,6 +810,7 @@ function renderGrid(game) {
   gridEl.style.gridTemplateColumns = `repeat(${cols}, var(--cell))`;
   gridEl.innerHTML = "";
 
+  const emoji = game.emoji || {}; // optional per-game icon overrides (Badge 2 themes)
   game.cells = {};
   for (let y = 0; y < grid.length; y++) {
     for (let x = 0; x < cols; x++) {
@@ -818,23 +819,23 @@ function renderGrid(game) {
       cell.className = "cell " + (ch === "#" ? "wall" : "open");
       if (ch === "G") {
         cell.classList.add("goal");
-        cell.textContent = "🏠";
+        cell.textContent = emoji.H || "🏠";
       }
       if (ch === "K") {
         cell.classList.add("key");
-        cell.textContent = "🔑";
+        cell.textContent = emoji.K || "🔑";
       }
       if (ch === "D") {
         cell.classList.add("door");
-        cell.textContent = "🚪";
+        cell.textContent = emoji.D || "🚪";
       }
       if (ch === "B") {
         cell.classList.add("block");
-        cell.textContent = "📦";
+        cell.textContent = emoji.B || "📦";
       }
       if (ch === "C") {
         cell.classList.add("cookie");
-        cell.textContent = "🍪";
+        cell.textContent = emoji.C || "🍪";
       }
       if (x === game.level.start.x && y === game.level.start.y) cell.classList.add("start");
       if (game.editable) {
@@ -866,9 +867,18 @@ function fitGrid(game) {
   // available width: the stage wrapper when visible, else a viewport-based guess
   const avail = wrap && wrap.clientWidth ? wrap.clientWidth : Math.min(window.innerWidth - 48, 520);
   let cell = Math.floor((avail - (game.cols + 1) * gap) / game.cols);
-  // optionally also cap by viewport height so the whole maze fits on screen
+  // optionally also cap by height so the whole game pod (minus the bottom
+  // message) fits on screen: viewport − chrome above the grid − room below it
   if (game.fitHeight && game.rows) {
-    const hCell = Math.floor((window.innerHeight * 0.6 - (game.rows + 1) * gap) / game.rows);
+    const pod = gridEl.closest(".box");
+    let hBudget = window.innerHeight * 0.55;
+    if (pod && gridEl.offsetParent) {
+      const head = document.querySelector(".tabs"); // sticky tab bar covers the top
+      const headH = head && getComputedStyle(head).position === "sticky" ? head.offsetHeight : 0;
+      const above = gridEl.getBoundingClientRect().top - pod.getBoundingClientRect().top;
+      hBudget = window.innerHeight - headH - above - 110; // room for sticky bar + legend + Play
+    }
+    const hCell = Math.floor((hBudget - (game.rows + 1) * gap) / game.rows);
     cell = Math.min(cell, hCell);
   }
   cell = Math.max(16, Math.min(game.maxCell || 48, cell));

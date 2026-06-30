@@ -179,9 +179,36 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 }
 /* roomier padding on the Build-stage pods (16px → 26px) */
 #b2-build .box { padding: 26px; }
+/* keep the game pod clear of the sticky tab bar when scrolled to */
+.b2-game-box { scroll-margin-top: 84px; }
 
 /* full-width game stage — keep the maze centered */
 .b2-game-box .stage-wrap { display: flex; justify-content: center; }
+
+/* themed-icon pickers (player / item / goal) under the maze tools */
+.b2-skins {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  margin-bottom: 12px;
+}
+.b2-skins label { font-weight: 700; color: var(--purple); display: inline-flex; align-items: center; gap: 6px; }
+.b2-skins .cond-select { border-color: var(--purple-light); }
+
+/* bigger, easier-to-read controls in the Build stage (Badge 1 sandbox unaffected) */
+#b2-build .maze-tool {
+  font-size: 1rem;
+  padding: 10px 15px;
+  border-radius: 10px;
+}
+#b2-build .maze-size { gap: 10px; margin-bottom: 14px; }
+#b2-build .size-label,
+#b2-build .b2-skins label { font-size: 1rem; }
+#b2-build .maze-size .cond-select { font-size: 1rem; padding: 8px 10px; }
+#b2-build .b2-skins { gap: 10px 20px; }
+#b2-build .b2-skins .cond-select { font-size: 1.4rem; padding: 5px 8px; }
 
 /* Badge 2: the player stays a 🤖 while the game runs (Badge 1 keeps its arrow).
    Replace the rotating blue arrow with the robot emoji and don't rotate it. */
@@ -191,7 +218,7 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   transform: none !important;
 }
 #grid-b2 .robot .body::after {
-  content: "\1F916"; /* 🤖 */
+  content: var(--b2-player, "\1F916"); /* themed player icon (defaults to 🤖) */
   color: initial;
   font-size: calc(var(--cell) * 0.7);
   line-height: 1;
