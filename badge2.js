@@ -1916,15 +1916,18 @@ async function b2BuildCertPdf() {
   // size, and size the maze to fill the vertical space that's left. Longer,
   // multi-line answers use more room, so the maze shrinks to keep it on one page.
   const prevWidth = cert.style.width;
+  const prevBg = cert.style.background;
   const scale = availW / B2_CERT_PDF_WIDTH; // css px -> pt when drawn at full printable width
   const targetPx = availH / scale;          // printable page height, in css px
   cert.style.width = B2_CERT_PDF_WIDTH + "px";
+  cert.style.background = "#ffffff"; // white background in the PDF (on-screen keeps its tint)
   b2FitCertBoardToHeight(targetPx);
   let canvas;
   try {
     canvas = await window.html2canvas(cert, { scale: B2_CERT_H2C_SCALE, backgroundColor: "#ffffff", useCORS: true });
   } finally {
     cert.style.width = prevWidth; // restore the responsive on-screen preview
+    cert.style.background = prevBg;
     b2FitCertBoard();
   }
   const img = canvas.toDataURL("image/jpeg", 0.9);
