@@ -1,0 +1,952 @@
+/* ============================================================
+   Badge 2 — Digital Game Design (Part 2)
+   Layered on top of styles.css; reuses its :root variables.
+   ============================================================ */
+
+/* ---------- Badge switcher ---------- */
+.badge-switch {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 14px 12px 0;
+}
+.badge-switch button {
+  border: 2px solid var(--purple-light);
+  background: #fff;
+  color: var(--purple);
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 9px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.15s;
+}
+.badge-switch button:hover { transform: translateY(-2px); }
+.badge-switch button.is-active { background: var(--purple); color: #fff; }
+.badge-switch .badge-emoji { margin-right: 6px; }
+
+/* show only the tabs that belong to the active badge */
+body.view-badge-1 .tab[data-badge="2"] { display: none; }
+body.view-badge-2 .tab[data-badge="1"] { display: none; }
+
+/* a ✓ marks Badge-2 stages the user has already visited (session memory) */
+.tab[data-badge="2"].is-visited::after {
+  content: "\2713"; /* ✓ as a unicode escape so it can't garble from file-encoding issues */
+  color: #2e7d32;
+  font-weight: 900;
+  margin-left: 6px;
+}
+.tab[data-badge="2"].is-visited.is-active::after { color: #b6f5c2; }
+
+/* ---------- Step prose & reflection ---------- */
+.b2-intro-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 26px;
+  box-shadow: var(--shadow);
+  max-width: 1080px;   /* fill the width like the Build step (was 760) */
+  margin: 0 auto;
+}
+.b2-intro-card h2 { color: var(--purple); margin-top: 0; }
+.b2-prose { line-height: 1.7; }
+.b2-prose p { margin: 0 0 4px; }
+.b2-plan-summary { margin: 0 0 16px; padding-left: 22px; }
+.b2-plan-summary li { margin-bottom: 4px; }
+
+/* Badge-2 Start card fills the width too (scoped so Badge 1's Start is unchanged) */
+body.view-badge-2 .welcome-card { max-width: 1080px; }
+
+.b2-callout {
+  background: #f3e9fc;
+  border-left: 6px solid var(--purple-light);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 14px 0;
+  color: #5a3d72;
+}
+
+/* reflection question + saved answer */
+.b2-reflect {
+  background: #fffaf0;
+  border: 2px dashed var(--yellow-deep);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+.b2-reflect label { display: block; font-weight: 700; color: #7a5300; margin-bottom: 8px; }
+.b2-reflect textarea,
+.b2-form textarea,
+.b2-form input[type="text"],
+.b2-form input[type="number"] {
+  width: 100%;
+  border: 2px solid #d9c8ec;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.98rem;
+  color: var(--ink);
+  resize: vertical;
+}
+.b2-form textarea {
+  min-height: 100px;
+  overflow: hidden;
+  resize: none;
+}
+.b2-reflect textarea:focus,
+.b2-form textarea:focus,
+.b2-form input:focus { outline: none; border-color: var(--purple-light); }
+.b2-saved-note { font-size: 0.78rem; color: #8a7ba0; margin-top: 6px; }
+/* small "Example: …" hint under a reflection question */
+.b2-eg { font-size: 0.84rem; font-style: italic; color: #7a6b90; margin: 0 0 6px; }
+
+/* "games for good" example cards — reuse Badge 1's .pioneer card look,
+   with a green "for good" accent and a clickable source link */
+#b2-discover .card-grid { margin: 20px 0; grid-auto-rows: 1fr; } /* 1fr rows → every card the same height */
+#b2-discover .pioneer { border-top-color: var(--green); }
+/* center the source/credit line (the wider .b2-prose p rule was overriding its auto margins) */
+#b2-discover .credit { text-align: center; margin-left: auto; margin-right: auto; }
+
+/* ---- Flip cards (Discover): front shows the icon + name; click/tap flips
+   to the detailed view. Both faces are stacked in one grid cell so the card
+   auto-sizes to the taller (back) face — no fixed height needed. Scoped to
+   #b2-discover so Badge 1's Coding Pioneers cards are untouched. ---- */
+#b2-discover .flip-card {
+  background: transparent;
+  box-shadow: none;
+  border-top: none;
+  padding: 0;
+  perspective: 1200px;
+  cursor: pointer;
+}
+#b2-discover .flip-inner {
+  display: grid;
+  height: 100%;                     /* fill the equal-height card cell */
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+}
+#b2-discover .flip-card.is-flipped .flip-inner { transform: rotateY(180deg); }
+#b2-discover .flip-front,
+#b2-discover .flip-back {
+  grid-area: 1 / 1;                 /* stack both faces in the same cell */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  border-top: 6px solid var(--green);
+}
+#b2-discover .flip-front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+}
+#b2-discover .flip-front .face {
+  height: auto;
+  width: 100%;
+  padding: 18px 0;
+  margin-bottom: 6px;
+}
+#b2-discover .flip-back {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+}
+#b2-discover .flip-back h3 { margin-top: 0; }
+/* pin the source + flip-back hint to the bottom; extra space lands between the
+   summary and the source */
+#b2-discover .flip-back .b2-source { margin-top: auto; }
+/* subtle "flip me" hint at the bottom of each face */
+#b2-discover .flip-hint {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8a7ba0;
+}
+#b2-discover .flip-card:hover .flip-front,
+#b2-discover .flip-card:hover .flip-back { box-shadow: 0 8px 22px rgba(90, 61, 114, 0.18); }
+#b2-discover .flip-card:focus-visible { outline: 3px solid var(--purple-light); outline-offset: 3px; border-radius: 18px; }
+@media (prefers-reduced-motion: reduce) {
+  #b2-discover .flip-inner { transition: none; }
+}
+.b2-source {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--purple);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.15s;
+}
+.b2-source:hover { border-bottom-color: var(--purple); }
+
+/* ---------- Planning worksheet ---------- */
+.b2-form .field { margin-bottom: 16px; }
+.b2-form .field > label { display: block; font-weight: 700; color: var(--purple); margin-bottom: 6px; }
+.b2-checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.b2-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 2px solid #e7d9f4;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.b2-checklist input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--purple); }
+.b2-field-hint { font-size: 0.85rem; color: #6b5d7d; margin: 2px 0 8px; }
+
+/* ---------- Plan peek reference card (Step 3) ---------- */
+.b2-plan-peek { margin-bottom: 20px; }
+.b2-plan-peek-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 26px;
+  padding: 6px 4px 16px;
+}
+.b2-plan-peek-body h4 { margin: 6px 0 10px; color: var(--purple); font-size: 1rem; }
+.b2-plan-peek-note { font-size: 0.8rem; color: #6b5d7d; margin: 10px 0 0; }
+
+/* ---- Maze pieces: emoji tile + name/desc, with a clear "Looks:" chip row ---- */
+.b2-plan-piece-list { list-style: none; margin: 0; padding: 0; }
+.b2-peek-piece {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.b2-peek-emoji {
+  flex: 0 0 auto;
+  width: 2.1em; height: 2.1em;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+  background: #f6f0fc;
+  border: 1.5px solid #e7d9f4;
+  border-radius: 10px;
+}
+.b2-peek-piece-body { font-size: 0.9rem; line-height: 1.4; padding-top: 2px; }
+.b2-peek-skins { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 6px; }
+.b2-peek-skins-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #8a7ba0; }
+.b2-peek-skin {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.9em; height: 1.9em;
+  font-size: 1rem;
+  background: #fff;
+  border: 1.5px solid #e7d9f4;
+  border-radius: 8px;
+}
+
+/* ---- Code blocks: color-coded category cards with one chip per real block ---- */
+.b2-peek-groups { display: flex; flex-direction: column; gap: 10px; }
+.b2-peek-group {
+  border-left: 4px solid var(--cat);
+  background: var(--cat-soft);
+  border-radius: 10px;
+  padding: 8px 11px 10px;
+}
+.b2-peek-group-head {
+  font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--cat);
+  margin-bottom: 7px;
+}
+.b2-peek-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.b2-peek-chip {
+  background: #fff;
+  border: 1.5px solid var(--cat);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #3a2c4a;
+}
+@media (max-width: 640px) {
+  .b2-plan-peek-body { grid-template-columns: 1fr; }
+}
+
+/* ---------- Game builder (Step 4) ---------- */
+/* compact 3-step quick start (Scratch-style: short, scannable, learn-by-doing) */
+.b2-quickstart {
+  list-style: none;
+  margin: 14px 0 16px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.b2-quickstart li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 2px solid #e7d9f4;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+.b2-qs-num {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: #fff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* one-line, self-documenting hint beside each palette category name */
+.b2-cat-hint {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #8a7ba0;
+  font-size: 0.74rem;
+}
+
+/* Step 4: mimic the Scratch editor layout — the maze "stage" and the
+   code palette/scripts sit side by side, ALWAYS (laptop, tablet, and
+   landscape phone alike), so a builder never has to scroll to see both at
+   once. Game settings stay a full-width strip on top. If a pod is hidden
+   (shared/embed mode) the remaining one grows to fill the row. */
+.b2-build-workspace {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 18px;
+}
+#b2-settings    { flex: 1 1 100%; order: 0; }
+.b2-scripts-box { order: 1; flex: 3 1 320px; min-width: 0; container-type: inline-size; } /* palette + scripts; query container so the palette can stack based on the pod's real width */
+.b2-game-box    { order: 2; flex: 2 1 280px; min-width: 0; } /* the "stage" */
+/* Large screens: let the build workspace break out past the 1080px page cap so
+   the maze "stage" can grow. Centered via negative inline margins relative to
+   <main>. The "How it all works" guide matches that width; the header/quickstart
+   above stay at the normal page width. */
+@media (min-width: 1200px) {
+  .b2-build-workspace,
+  #b2-build .b2-build-body > .b2-guide {
+    width: min(96vw, 1440px);
+    margin-inline: calc(50% - min(96vw, 1440px) / 2);
+  }
+}
+/* roomier padding on the Build-stage pods (16px → 26px) */
+#b2-build .box { padding: 26px; }
+/* keep the game pod clear of the sticky tab bar when scrolled to */
+.b2-game-box { scroll-margin-top: 84px; }
+
+/* ---- Narrow portrait phones: side-by-side has no room to shrink into
+   usefully, so ask for landscape instead (same idea as mobile games) —
+   landscape phones are wide enough to use the normal layout above. ---- */
+.b2-rotate-gate { display: none; }
+@media (max-width: 600px) and (orientation: portrait) {
+  #b2-build .b2-build-body { display: none; }
+  .b2-rotate-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    background: #fff;
+    border-radius: 20px;
+    padding: 34px 22px;
+    box-shadow: var(--shadow);
+    max-width: 420px;
+    margin: 18px auto;
+  }
+  .b2-rotate-gate-emoji { font-size: 2.4rem; animation: b2-rotate-nudge 1.6s ease-in-out infinite; }
+  .b2-rotate-gate p { margin: 0; line-height: 1.5; color: var(--ink); }
+}
+@keyframes b2-rotate-nudge {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-90deg); }
+}
+
+/* full-width game stage — keep the maze centered */
+.b2-game-box .stage-wrap { display: flex; justify-content: center; position: relative; }
+
+/* "show message" toast — pops briefly in the CENTER of the maze, then fades */
+.b2-say-toast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  max-width: 88%;
+  background: rgba(58, 44, 74, 0.94);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 9px 15px;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 6;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.b2-say-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+@media (prefers-reduced-motion: reduce) {
+  .b2-say-toast { transition: opacity 0.25s ease; }
+}
+
+/* themed-icon pickers (player / item / goal) under the maze tools */
+.b2-skins {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  margin-bottom: 12px;
+}
+.b2-skins label { font-weight: 700; color: var(--purple); display: inline-flex; align-items: center; gap: 6px; }
+.b2-skins .cond-select { border-color: var(--purple-light); }
+
+/* Build-stage controls (Badge 1 sandbox unaffected) */
+#b2-build .maze-tool {
+  font-size: 1rem;
+  padding: 10px 15px;
+  border-radius: 10px;
+}
+/* compact paint/size buttons inside the "Your game" stage pod so they don't
+   crowd the maze — leaves more room for a bigger board */
+#b2-build .b2-game-box .maze-tool {
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+#b2-build .maze-size { gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+#b2-build .size-label,
+#b2-build .b2-skins label { font-size: 0.9rem; }
+#b2-build .maze-size .cond-select { font-size: 0.9rem; padding: 6px 9px; }
+/* match the Size dropdown to the Random / Clear / Erase buttons beside it */
+#b2-build .b2-game-box .maze-size .cond-select { font-size: 0.78rem; padding: 4px 8px; border-radius: 8px; }
+#b2-build .b2-skins { gap: 8px 16px; margin-bottom: 10px; }
+#b2-build .b2-skins .cond-select { font-size: 1.2rem; padding: 4px 7px; }
+
+/* Badge 2: the player stays a 🤖 while the game runs (Badge 1 keeps its arrow).
+   Replace the rotating blue arrow with the robot emoji and don't rotate it. */
+#grid-b2 .robot .body {
+  background: none;
+  box-shadow: none;
+  transform: none !important;
+}
+#grid-b2 .robot .body::after {
+  content: var(--b2-player, "\1F916"); /* themed player icon (defaults to 🤖) */
+  color: initial;
+  font-size: calc(var(--cell) * 0.7);
+  line-height: 1;
+}
+/* settings fields side-by-side when there's room */
+.b2-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 16px;
+}
+/* code area: fixed-ish palette column, scripts take the rest.
+   align-items: stretch makes both columns share the row height so the
+   scripts dropzone can fill the whole pod (see .b2-scripts-list below) */
+.b2-code-cols {
+  display: grid;
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+.b2-code-palette,
+.b2-code-scripts { min-width: 0; }
+.b2-code-palette h3 { margin-top: 0; }
+.b2-code-scripts { display: flex; flex-direction: column; }
+/* "Your Scripts" header row: label on the left, Clear blocks button on the right */
+.b2-scripts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+/* hide the run message bar when it's empty (no instruction shown during play) */
+#msg-b2:empty { display: none; }
+/* When the code pod itself (not the window) gets too narrow to hold the
+   palette AND a usable scripts canvas side by side, stack them: the palette
+   becomes a compact band across the top and the scripts canvas takes the pod's
+   full width, so placed blocks stop wrapping into an unreadable stack.
+   Container query on .b2-scripts-box so this is driven by the pod's real width
+   at any window size / layout. */
+@container (max-width: 560px) {
+  .b2-code-cols { grid-template-columns: 1fr; }
+  /* lay the category cards out as a compact wrapping band (2+ columns) instead
+     of one tall column, so the scripts canvas stays near the top of the pod.
+     Extra specificity beats the base .b2-scripts-palette flex-column rule. */
+  .b2-code-palette .b2-scripts-palette {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+/* ---------- Scratch-style code blocks (Step 4) ---------- */
+/* category color tokens — palette swatch + placed blocks share the hue */
+.cat-events  { --cat: #f5a623; --cat-soft: #fff2d6; }
+.cat-motion  { --cat: #4a6fd4; --cat-soft: #e3eaff; }
+.cat-actions { --cat: #8e44ad; --cat-soft: #f3e6fa; }
+.cat-control { --cat: #e08a3c; --cat-soft: #fdeede; }
+
+/* palette grouped into color-coded categories */
+.b2-code-palette .palette-hint { margin-bottom: 14px; }
+.b2-scripts-palette { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+.b2-cat {
+  border: 1px solid #ece3f7;
+  border-left: 5px solid var(--cat);
+  border-radius: 12px;
+  padding: 9px 11px 11px;
+  background: #fbf9ff;
+}
+.b2-cat-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cat);
+  margin-bottom: 8px;
+}
+.cmd-btn.b2-pal {
+  width: 100%;
+  margin-bottom: 8px;
+  justify-content: space-between;
+  background: var(--cat);
+}
+.cmd-btn.b2-pal:last-child { margin-bottom: 0; }
+.b2-pal-text { display: inline-flex; align-items: center; gap: 6px; }
+
+/* the scripts dropzone fills the whole pod height, so a block can be dropped
+   anywhere in the area — not just right below the last block.  Dropping
+   between two blocks still inserts between them (dropIndex handles that). */
+.b2-scripts-list {
+  flex: 1 1 auto;
+  min-height: 240px;
+  border: 2px dashed #cdb8e8;
+  border-radius: 12px;
+  padding: 10px;
+  background: #faf8ff;
+}
+.b2-scripts-list .program-empty { border: none; background: none; padding: 10px; }
+
+/* placed hat / control blocks (reuse Badge 1's .block look, recolored) */
+.b2-block {
+  border: 2px solid var(--cat);
+  background: var(--cat-soft);
+  border-radius: 11px;
+}
+.b2-block > .block-head { font-weight: 800; color: #3a2c4a; font-size: 0.95rem; }
+.b2-block.b2-hat {
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+}
+.b2-block.b2-hat > .block-head::before {
+  content: "\25B8";
+  color: var(--cat);
+  margin-right: 2px;
+}
+.b2-body { background: rgba(255, 255, 255, 0.8); }
+
+/* placed action chips */
+.b2-chip {
+  border-left: 6px solid var(--cat);
+  background: #fff;
+  flex-wrap: wrap;
+  font-weight: 700;
+  color: #3a2c4a;
+}
+
+/* inline dropdowns / inputs inside blocks */
+.b2-select {
+  font-weight: 700;
+  border: 2px solid var(--cat, var(--purple-light));
+  border-radius: 7px;
+  padding: 2px 4px;
+  background: #fff;
+  max-width: 100%;
+}
+.b2-say-input {
+  border: 2px solid var(--cat, var(--purple-light));
+  border-radius: 7px;
+  padding: 2px 7px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  max-width: 150px;
+}
+
+/* lock the palette/blocks while a game is being played */
+.box.is-locked .cmd-btn,
+.box.is-locked .grip,
+.box.is-locked .b2-select,
+.box.is-locked .b2-say-input { opacity: 0.45; pointer-events: none; }
+
+/* D-pad — only shown while a game is being played */
+.b2-dpad-wrap { display: flex; justify-content: center; margin-top: 14px; }
+.b2-dpad[hidden] { display: none; }
+.b2-dpad {
+  display: inline-grid;
+  grid-template-rows: auto auto auto;
+  gap: 5px;
+  align-items: center;
+  justify-items: center;
+  outline: none;
+}
+.dpad-middle { display: flex; gap: 5px; align-items: center; }
+.dpad-btn {
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--purple-light);
+  background: #fff;
+  border-radius: 12px;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.08s;
+  touch-action: manipulation;
+  user-select: none;
+}
+.dpad-btn:hover  { background: #ede0fc; }
+.dpad-btn:active { background: var(--purple-light); transform: scale(0.93); }
+.dpad-center { width: 56px; height: 56px; }
+
+.b2-hud {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--purple);
+  background: #f3e9fc;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+.b2-hud[hidden] { display: none; }
+
+/* cookie collectible (cell, wall, open, key, door, goal come from styles.css) */
+.cell.cookie { background: #fff4c2; }
+
+/* ---------- Share-stage embedded game ---------- */
+.b2-embed-wrap { margin: 12px 0 6px; }
+.b2-embed-frame {
+  width: 100%;
+  height: 580px;
+  border: 2px solid var(--purple-light);
+  border-radius: 16px;
+  background: #faf8ff;
+  display: block;
+}
+.b2-embed-frame[hidden] { display: none; }
+.b2-embed-empty {
+  background: #fffaf0;
+  border: 2px dashed var(--yellow-deep);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #7a5300;
+}
+
+/* "embed" mode: this page loaded inside the Share iframe — show only the game */
+body.b2-embed .site-header,
+body.b2-embed .badge-switch,
+body.b2-embed #tabs,
+body.b2-embed .site-footer,
+body.b2-embed #b2-build > .level-head,
+body.b2-embed #b2-build > .b2-rotate-gate,
+body.b2-embed #b2-build .b2-quickstart,
+body.b2-embed #b2-build .b2-guide,
+body.b2-embed #b2-build #b2-shared-hint,
+body.b2-embed #b2-build [data-b2goto],
+body.b2-embed .b2-game-box > h3 { display: none !important; }
+body.b2-embed { margin: 0; }
+body.b2-embed main { max-width: none; padding: 6px; }
+body.b2-embed .b2-build-workspace { margin-top: 0; gap: 0; }
+body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
+
+/* ---------- Share link box ---------- */
+.b2-share-box {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 10px 0 4px;
+}
+.b2-share-box input {
+  flex: 1;
+  min-width: 220px;
+  border: 2px solid var(--purple-light);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: #faf6ff;
+}
+
+/* ---------- Play modal (title / win / lose cards) ---------- */
+.b2-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 20, 70, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 20px;
+}
+.b2-modal[hidden] { display: none; }
+.b2-modal-box {
+  background: #fff;
+  border-radius: 22px;
+  padding: 30px;
+  text-align: center;
+  max-width: 440px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  animation: pop 0.3s ease;
+}
+.b2-modal-box .b2-modal-emoji { font-size: 3.2rem; }
+
+/* ---------- "How it works" guide (Step 4) ---------- */
+.b2-guide {
+  background: #fff;
+  border: 2px solid var(--purple-light);
+  border-radius: 16px;
+  padding: 4px 18px;
+  margin: 14px 0 18px;
+  box-shadow: var(--shadow);
+}
+.b2-guide > summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: var(--purple);
+  padding: 12px 4px;
+  list-style: none;
+}
+.b2-guide > summary::-webkit-details-marker { display: none; }
+.b2-guide > summary::before { content: "\25B8\00A0"; }
+.b2-guide[open] > summary::before { content: "\25BE\00A0"; }
+.b2-guide-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 26px;
+  padding: 6px 4px 16px;
+}
+.b2-guide-col h4 { margin: 6px 0 8px; color: var(--purple); font-size: 1rem; }
+.b2-guide-col ul { list-style: none; margin: 0; padding: 0; }
+.b2-guide-col li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.b2-guide-ico { font-size: 1.15rem; flex: 0 0 auto; width: 1.4em; text-align: center; }
+@media (max-width: 640px) {
+  .b2-guide-body { grid-template-columns: 1fr; }
+}
+.b2-modal-box h2 { color: var(--purple); margin: 6px 0; }
+.b2-modal-box p { line-height: 1.5; }
+.b2-modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+
+/* iteration tip banner */
+.b2-tip {
+  background: linear-gradient(120deg, var(--yellow), var(--yellow-deep));
+  color: #3a2c08;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 20px 0;
+}
+.b2-tip h3 { margin: 0 0 6px; }
+
+/* ============================================================
+   Finish stage — celebration, certificate, PDF/email actions
+   ============================================================ */
+.b2-finish-hero {
+  text-align: center;
+  background: linear-gradient(135deg, #f3e9fc, #fff6df);
+  border-radius: 18px;
+  padding: 22px 20px;
+  margin-bottom: 18px;
+}
+.b2-finish-hero h2 { color: var(--purple); margin: 6px 0 8px; }
+.b2-finish-emoji { font-size: 2.6rem; line-height: 1; }
+.b2-finish-name { max-width: 420px; margin: 0 auto 18px; text-align: center; }
+.b2-finish-name > label { display: block; text-align: center; }
+.b2-finish-name input { text-align: center; }
+
+/* ---- The certificate card (this is what gets rendered into the PDF) ---- */
+.b2-cert {
+  background: #fffdf8;
+  border: 3px double var(--purple);
+  border-radius: 16px;
+  padding: 22px 24px 18px;
+  margin: 12px 0 18px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+.b2-cert-ribbon {
+  text-align: center;
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: var(--purple);
+  letter-spacing: 0.02em;
+}
+.b2-cert-badge {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8a7ba0;
+  margin: 2px 0 12px;
+}
+.b2-cert-who { text-align: center; line-height: 1.5; margin: 0 0 16px; }
+.b2-cert-who b { font-size: 1.35rem; color: var(--purple); }
+.b2-cert-cols {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  border-top: 2px dashed #e7d9f4;
+  padding: 14px 0;
+}
+.b2-cert-cols h4 { margin: 0 0 8px; color: var(--purple); font-size: 0.98rem; }
+.b2-cert-board-wrap { text-align: center; }
+.b2-cert-grid {
+  display: grid;
+  gap: 1px;
+  background: #d9c8ec;
+  border: 2px solid #d9c8ec;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0 auto;
+  width: max-content;
+  line-height: 1;
+}
+.b2-cert-cell {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5eefc;
+}
+.b2-cert-cell.wall { background: #3a2c4a; }
+.b2-cert-msgs {
+  font-size: 0.85rem;
+  text-align: left;
+  padding: 12px 0 14px;
+  border-bottom: 2px dashed #e7d9f4;
+}
+.b2-cert-msgs p { margin: 4px 0; line-height: 1.4; }
+.b2-cert-facts ul { list-style: none; margin: 0; padding: 0; }
+.b2-cert-facts li {
+  padding: 5px 0;
+  border-bottom: 1px solid #f0e8fa;
+  font-size: 0.9rem;
+}
+.b2-cert-section { padding: 14px 0 4px; }
+.b2-cert-section h4 { margin: 0 0 10px; color: var(--purple); font-size: 0.98rem; }
+.b2-cert-answer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px 0;
+  margin-bottom: 8px;
+}
+.b2-cert-answer b { font-size: 0.82rem; color: #6b5d7d; }
+.b2-cert-answer span { font-size: 0.92rem; line-height: 1.4; }
+.b2-cert-skills { border-top: 2px dashed #e7d9f4; padding-top: 12px; }
+.b2-cert-skills h4 { margin: 0 0 8px; color: var(--purple); font-size: 0.98rem; }
+.b2-cert-skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.b2-cert-skill-chips span {
+  background: #f3e9fc;
+  border: 1.5px solid var(--purple-light);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--purple);
+}
+.b2-cert-foot {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #8a7ba0;
+  padding-top: 24px;
+}
+@media (max-width: 560px) {
+  .b2-cert-cols { grid-template-columns: 1fr; }
+}
+
+/* ---- Certificate actions (Save as PDF / email) ---- */
+.b2-cert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 4px;
+}
+.b2-cert-status { font-weight: 700; font-size: 0.9rem; margin: 8px 0 0; min-height: 1.2em; }
+.b2-cert-status.is-working { color: var(--purple); }
+.b2-cert-status.is-ok { color: #2e7d32; }
+.b2-cert-status.is-bad { color: #c0392b; }
+
+/* ============================================================
+   Share stage — playtest loop clarity
+   ============================================================ */
+/* the "how playtesting works" numbered steps (single column) */
+.b2-share-how .b2-guide-body { display: block; }
+.b2-share-steps { list-style: none; margin: 0; padding: 0; }
+.b2-share-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 10px;
+  line-height: 1.4;
+  font-size: 0.95rem;
+}
+.b2-share-steps li:last-child { margin-bottom: 0; }
+.b2-share-steps .b2-qs-num { margin-top: 1px; }
+
+/* the playtester's own section, visually set apart from the maker's page */
+.b2-tester-panel {
+  background: #eef7ff;
+  border: 2px solid #bcdcff;
+  border-radius: 16px;
+  padding: 16px 18px 18px;
+  margin: 20px 0;
+}
+.b2-tester-panel h3 { margin: 0; color: #1f6bb0; }
+.b2-tester-note { font-size: 0.9rem; color: #3a5a75; margin: 6px 0 4px; }
+.b2-tester-panel .b2-reflect {
+  background: #fff;
+  border-color: #bcdcff;
+}
+.b2-tester-panel .b2-reflect label { color: #1f6bb0; }
+
+/* Share stage navigation: back to Build vs on to Finish (centered) */
+.b2-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0 6px;
+  justify-content: center;
+}
+.b2-clear-feedback { margin-top: 14px; }
+
+/* Center the "Next" navigation buttons at the bottom of every Badge-2 stage
+   (shrink-to-fit + auto side margins). Badge 1 uses data-goto, so untouched. */
+.welcome-card > [data-b2goto],
+.b2-intro-card > [data-b2goto],
+.b2-build-body > [data-b2goto] {
+  display: block;
+  width: fit-content;
+  margin: 20px auto 0;
+}

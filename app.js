@@ -192,9 +192,9 @@ const PIONEERS = [
 
 /* ============================================================
    Command model
-   {id, type:'forward'|'left'|'right'}
+   {id, type:'forward'|'left'|'right'|'pickup'|'unlock'}
    {id, type:'repeat', count:Number, body:[]}
-   {id, type:'if', cond:'pathAhead', then:[], else:[]}
+   {id, type:'if', cond:'pathAhead'|'carryingKey'|'onKey'|'doorAhead', then:[], else:[]}
    ============================================================ */
 const MAX_REPEAT = 50;
 let UID = 1;
@@ -247,16 +247,20 @@ function parseMap(level) {
   return { grid, goal };
 }
 
+function inBounds(grid, x, y) {
+  return y >= 0 && y < grid.length && x >= 0 && x < grid[y].length;
+}
+
 function isOpen(grid, x, y) {
-  if (y < 0 || y >= grid.length) return false;
-  if (x < 0 || x >= grid[y].length) return false;
-  return grid[y][x] !== "#";
+  if (!inBounds(grid, x, y)) return false;
+  const ch = grid[y][x];
+  return ch !== "#" && ch !== "D" && ch !== "B"; // walls, locked doors, and blocks stop the robot
 }
 
 function simulate(level, program) {
   const { grid, goal } = parseMap(level);
-  const state = { x: level.start.x, y: level.start.y, dir: level.start.dir };
-  const frames = [{ ...state, crashed: false }];
+  const state = { x: level.start.x, y: level.start.y, dir: level.start.dir, keys: 0 };
+  const frames = [{ x: state.x, y: state.y, dir: state.dir, crashed: false, carrying: 0, event: null }];
   const result = { frames, success: false, crashed: false, message: "" };
 
   let stop = false;
@@ -267,8 +271,28 @@ function simulate(level, program) {
     const d = DELTA[state.dir];
     return isOpen(grid, state.x + d.x, state.y + d.y);
   }
-  function record(crashed) {
-    frames.push({ x: state.x, y: state.y, dir: state.dir, crashed });
+  function cellAhead() {
+    const d = DELTA[state.dir];
+    return { x: state.x + d.x, y: state.y + d.y };
+  }
+  function onKey() {
+    return grid[state.y][state.x] === "K";
+  }
+  function doorAhead() {
+    const { x, y } = cellAhead();
+    return inBounds(grid, x, y) && grid[y][x] === "D";
+  }
+  function evalCond(cond) {
+    switch (cond) {
+      case "pathAhead": return pathAhead();
+      case "carryingKey": return state.keys > 0;
+      case "onKey": return onKey();
+      case "doorAhead": return doorAhead();
+      default: return false;
+    }
+  }
+  function record(crashed, event) {
+    frames.push({ x: state.x, y: state.y, dir: state.dir, crashed, carrying: state.keys, event: event || null });
   }
   function reachedGoal() {
     return goal && state.x === goal.x && state.y === goal.y;
@@ -290,7 +314,10 @@ function simulate(level, program) {
           const ny = state.y + d.y;
           if (!isOpen(grid, nx, ny)) {
             result.crashed = true;
-            result.message = "Bonk! The robot hit a wall. Check your sequence and try again.";
+            result.message =
+              inBounds(grid, nx, ny) && grid[ny][nx] === "D"
+                ? "🔒 That door is locked! Stand in front of it and Unlock door first (you'll need a key 🔑)."
+                : "Bonk! The robot hit a wall. Check your sequence and try again.";
             record(true);
             stop = true;
             return;
@@ -313,6 +340,26 @@ function simulate(level, program) {
           state.dir = (state.dir + 1) % 4;
           record(false);
           break;
+        case "pickup":
+          if (onKey()) {
+            grid[state.y][state.x] = "."; // key leaves the maze, robot now carries it
+            state.keys++;
+            record(false, { type: "pickup", x: state.x, y: state.y });
+          } else {
+            record(false); // nothing to pick up here — harmless
+          }
+          break;
+        case "unlock": {
+          const { x, y } = cellAhead();
+          if (doorAhead() && state.keys > 0) {
+            grid[y][x] = "."; // door swings open
+            state.keys--; // the key is used up on the lock
+            record(false, { type: "unlock", x, y });
+          } else {
+            record(false); // no door ahead, or no key — harmless
+          }
+          break;
+        }
         case "repeat": {
           const n = Math.max(0, Math.min(MAX_REPEAT, c.count | 0));
           for (let i = 0; i < n; i++) {
@@ -322,8 +369,7 @@ function simulate(level, program) {
           break;
         }
         case "if": {
-          const truthy = c.cond === "pathAhead" ? pathAhead() : false;
-          run(truthy ? c.then : c.else);
+          run(evalCond(c.cond) ? c.then : c.else);
           break;
         }
       }
@@ -346,7 +392,47 @@ const TOOL_INFO = {
   right: { label: "Turn Right", ico: "↩️", cls: "cmd-right" },
   repeat: { label: "Repeat …", ico: "🔁", cls: "cmd-repeat" },
   if: { label: "IF / ELSE …", ico: "❓", cls: "cmd-if" },
+  pickup: { label: "Pick up key", ico: "🔑", cls: "cmd-pickup" },
+  unlock: { label: "Unlock door", ico: "🚪", cls: "cmd-unlock" },
+  push: { label: "Push", ico: "🤜", cls: "cmd-push" },
 };
+
+/* the simple, body-less commands and the side-stripe class each gets in the program */
+const SIMPLE_TYPES = {
+  forward: "is-move",
+  left: "is-turn",
+  right: "is-turn",
+  pickup: "is-key",
+  unlock: "is-door",
+  push: "is-push",
+};
+
+/* IF conditions the kids can choose from, with kid-friendly wording */
+const COND_INFO = {
+  pathAhead: "the path ahead is clear",
+  carryingKey: "you are carrying a key",
+  onKey: "you are standing on a key",
+  doorAhead: "there is a door ahead",
+  blockAhead: "there is a block ahead",
+};
+
+/* a maze uses keys/doors if its palette offers the pickup/unlock commands */
+function usesKeysDoors(level) {
+  return level.tools.includes("pickup") || level.tools.includes("unlock");
+}
+
+/* a maze uses pushable blocks if its palette offers the push command */
+function usesBlocks(level) {
+  return level.tools.includes("push");
+}
+
+/* which IF conditions to show for a given maze (extra ones only when relevant) */
+function conditionsFor(level) {
+  const conds = ["pathAhead"];
+  if (usesKeysDoors(level)) conds.push("carryingKey", "onKey", "doorAhead");
+  if (usesBlocks(level)) conds.push("blockAhead");
+  return conds;
+}
 
 const games = [];
 
@@ -438,10 +524,10 @@ function emptyHint(text) {
 }
 
 function renderCommand(game, cmd, parentArr, index) {
-  if (cmd.type === "forward" || cmd.type === "left" || cmd.type === "right") {
+  if (SIMPLE_TYPES[cmd.type]) {
     const info = TOOL_INFO[cmd.type];
     const li = document.createElement("li");
-    li.className = "cmd-chip prog-item " + (cmd.type === "forward" ? "is-move" : "is-turn");
+    li.className = "cmd-chip prog-item " + SIMPLE_TYPES[cmd.type];
     li.dataset.id = cmd.id;
     if (cmd.id === justAddedId) li.classList.add("just-added");
     li.innerHTML = `<span class="grip">⠿</span><span class="ico">${info.ico}</span> ${info.label}`;
@@ -490,7 +576,9 @@ function renderCommand(game, cmd, parentArr, index) {
     makeDragSource(head.querySelector(".grip"), () => ({ kind: "move", id: cmd.id, game, label: "IF / ELSE" }));
     const sel = document.createElement("select");
     sel.className = "cond-select";
-    sel.innerHTML = `<option value="pathAhead">the path ahead is clear</option>`;
+    sel.innerHTML = conditionsFor(game.level)
+      .map((k) => `<option value="${k}">${COND_INFO[k]}</option>`)
+      .join("");
     sel.value = cmd.cond;
     sel.addEventListener("change", () => (cmd.cond = sel.value));
     head.appendChild(sel);
@@ -587,7 +675,8 @@ function beginDrag(e) {
 
   // dim the card being moved so it reads as "lifted"
   if (activeDrag.kind === "move") {
-    const el = document.querySelector(`#program-${cssId(activeDrag.game.idx)} .prog-item[data-id="${activeDrag.id}"]`);
+    const root = activeDrag.game.listEl || document.getElementById(`program-${cssId(activeDrag.game.idx)}`);
+    const el = root && root.querySelector(`.prog-item[data-id="${activeDrag.id}"]`);
     if (el) el.classList.add("is-dragging");
   }
 }
@@ -611,8 +700,10 @@ function zoneUnderPointer(e) {
   const zone = elBelow.closest(".dropzone");
   if (!zone || zone._game !== activeDrag.game) return null;
   if (activeDrag.kind === "move") {
-    const found = findById(activeDrag.game.program, activeDrag.id);
-    if (found && ownArrays(found.cmd).has(zone._arr)) return null;
+    const find = activeDrag.game.findById || findById;
+    const owns = activeDrag.game.ownArrays || ownArrays;
+    const found = find(activeDrag.game.program, activeDrag.id);
+    if (found && owns(found.cmd).has(zone._arr)) return null;
   }
   return zone;
 }
@@ -664,12 +755,14 @@ function onPointerUp(e) {
     const arr = zone._arr;
     const idx = dropIndex(zone, e.clientY);
     if (activeDrag.kind === "new") {
-      const cmd = makeCommand(activeDrag.tool);
+      const cmd = game.makeItem ? game.makeItem(activeDrag.tool) : makeCommand(activeDrag.tool);
       arr.splice(idx, 0, cmd);
       justAddedId = cmd.id;
     } else {
-      const found = findById(game.program, activeDrag.id);
-      if (found && !ownArrays(found.cmd).has(arr)) {
+      const find = game.findById || findById;
+      const owns = game.ownArrays || ownArrays;
+      const found = find(game.program, activeDrag.id);
+      if (found && !owns(found.cmd).has(arr)) {
         let target = idx;
         const wasSameArr = found.arr === arr;
         found.arr.splice(found.index, 1);
@@ -678,7 +771,7 @@ function onPointerUp(e) {
         justAddedId = found.cmd.id;
       }
     }
-    renderProgram(game);
+    if (game.renderList) game.renderList(); else renderProgram(game);
   }
   endDrag();
 }
@@ -701,7 +794,7 @@ function initDragEngine() {
     if (activeDrag) {
       const game = activeDrag.game;
       endDrag();
-      if (game) renderProgram(game); // restore the dimmed card
+      if (game) { if (game.renderList) game.renderList(); else renderProgram(game); } // restore the dimmed card
     }
     pendingDrag = null;
   });
@@ -717,6 +810,7 @@ function renderGrid(game) {
   gridEl.style.gridTemplateColumns = `repeat(${cols}, var(--cell))`;
   gridEl.innerHTML = "";
 
+  const emoji = game.emoji || {}; // optional per-game icon overrides (Badge 2 themes)
   game.cells = {};
   for (let y = 0; y < grid.length; y++) {
     for (let x = 0; x < cols; x++) {
@@ -725,7 +819,23 @@ function renderGrid(game) {
       cell.className = "cell " + (ch === "#" ? "wall" : "open");
       if (ch === "G") {
         cell.classList.add("goal");
-        cell.textContent = "🏠";
+        cell.textContent = emoji.H || "🏠";
+      }
+      if (ch === "K") {
+        cell.classList.add("key");
+        cell.textContent = emoji.K || "🔑";
+      }
+      if (ch === "D") {
+        cell.classList.add("door");
+        cell.textContent = emoji.D || "🚪";
+      }
+      if (ch === "B") {
+        cell.classList.add("block");
+        cell.textContent = emoji.B || "📦";
+      }
+      if (ch === "C") {
+        cell.classList.add("cookie");
+        cell.textContent = emoji.C || "🍪";
       }
       if (x === game.level.start.x && y === game.level.start.y) cell.classList.add("start");
       if (game.editable) {
@@ -740,9 +850,10 @@ function renderGrid(game) {
   const robot = document.createElement("div");
   robot.className = "robot";
   robot.id = `robot-${game.idx}`;
-  robot.innerHTML = `<div class="body"></div>`;
+  robot.innerHTML = `<div class="body"></div><span class="carry" hidden></span>`;
   gridEl.appendChild(robot);
   game.robotEl = robot;
+  updateCarry(game, 0);
   game.goal = goal;
   fitGrid(game);
 }
@@ -756,7 +867,29 @@ function fitGrid(game) {
   // available width: the stage wrapper when visible, else a viewport-based guess
   const avail = wrap && wrap.clientWidth ? wrap.clientWidth : Math.min(window.innerWidth - 48, 520);
   let cell = Math.floor((avail - (game.cols + 1) * gap) / game.cols);
-  cell = Math.max(16, Math.min(48, cell));
+  // optionally also cap by height so the whole game pod (minus the bottom
+  // message) fits on screen: viewport − chrome above the grid − room below it
+  if (game.fitHeight && game.rows) {
+    const pod = gridEl.closest(".box");
+    const wrap = gridEl.parentElement; // .stage-wrap
+    let hBudget = window.innerHeight * 0.55;
+    if (pod && gridEl.offsetParent) {
+      const head = document.querySelector(".tabs"); // sticky tab bar covers the top
+      const headH = head && getComputedStyle(head).position === "sticky" ? head.offsetHeight : 0;
+      const podR = pod.getBoundingClientRect();
+      const above = wrap.getBoundingClientRect().top - podR.top;
+      // embedded play: fit ALL of the chrome below the grid (legend + Play +
+      // d-pad) so there's no scrolling; in the Build stage the bottom message
+      // is allowed to sit below the fold.
+      const below = document.body.classList.contains("b2-embed")
+        ? podR.bottom - wrap.getBoundingClientRect().bottom + 6
+        : 110;
+      hBudget = window.innerHeight - headH - above - below;
+    }
+    const hCell = Math.floor((hBudget - (game.rows + 1) * gap) / game.rows);
+    cell = Math.min(cell, hCell);
+  }
+  cell = Math.max(16, Math.min(game.maxCell || 48, cell));
   gridEl.style.setProperty("--cell", `${cell}px`);
   if (!game.playing) placeRobot(game, game.level.start, false);
 }
@@ -776,18 +909,51 @@ function placeRobot(game, st, crashed) {
   game.robotEl.classList.toggle("crashed", !!crashed);
 }
 
+/* show how many keys the robot is carrying as a little badge */
+function updateCarry(game, count) {
+  const badge = game.robotEl && game.robotEl.querySelector(".carry");
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count > 1 ? `🔑×${count}` : "🔑";
+    badge.hidden = false;
+  } else {
+    badge.hidden = true;
+  }
+}
+
+/* reflect a key pickup / door unlock / block push on the maze during playback */
+function applyEvent(game, ev) {
+  if (ev.type === "push") {
+    const from = game.cells[`${ev.from.x},${ev.from.y}`];
+    const to = game.cells[`${ev.to.x},${ev.to.y}`];
+    if (from) { from.classList.remove("block"); from.textContent = ""; }
+    if (to) { to.classList.add("block"); to.textContent = "📦"; }
+    return;
+  }
+  const cell = game.cells[`${ev.x},${ev.y}`];
+  if (!cell) return;
+  if (ev.type === "pickup") {
+    cell.classList.remove("key");
+    cell.textContent = "";
+  } else if (ev.type === "unlock") {
+    cell.classList.remove("door");
+    cell.classList.add("door-open");
+    cell.textContent = "🔓";
+  }
+}
+
 /* ---------------- Controls & playback ---------------- */
 function wireControls(game) {
   document.getElementById(`run-${game.idx}`).addEventListener("click", () => runProgram(game));
   document.getElementById(`reset-${game.idx}`).addEventListener("click", () => {
     if (game.playing) return;
-    placeRobot(game, game.level.start, false);
+    renderGrid(game); // also restores collected keys / opened doors and re-places the robot
     setMsg(game, "info", "Robot reset. Press Run when ready!");
   });
   document.getElementById(`clear-${game.idx}`).addEventListener("click", () => {
     if (game.playing) return;
     game.program.length = 0;
-    placeRobot(game, game.level.start, false);
+    renderGrid(game);
     renderProgram(game);
     setMsg(game, "info", "Program cleared.");
   });
@@ -816,12 +982,14 @@ function runProgram(game) {
     return;
   }
   const result = simulate(game.level, game.program);
+  renderGrid(game); // fresh maze: restore any keys/doors changed by a previous run
   game.playing = true;
   setButtonsDisabled(game, true);
   setMsg(game, "info", "Running… 🤖");
 
   let i = 0;
   placeRobot(game, result.frames[0], false);
+  updateCarry(game, 0);
   const timer = setInterval(() => {
     i++;
     if (i >= result.frames.length) {
@@ -829,7 +997,10 @@ function runProgram(game) {
       finishRun(game, result);
       return;
     }
-    placeRobot(game, result.frames[i], result.frames[i].crashed);
+    const frame = result.frames[i];
+    placeRobot(game, frame, frame.crashed);
+    updateCarry(game, frame.carrying);
+    if (frame.event) applyEvent(game, frame.event);
   }, 360);
 }
 
