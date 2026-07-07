@@ -1199,8 +1199,8 @@ function b2BuildExplore() {
   return `
     <div class="level-head"><h2>Step 2 — Explore</h2></div>
     <div class="b2-intro-card b2-prose">
-      <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>.\n\nHere's how each one shows up in a game:</p>
-      <p>📋 <strong>Sequence</strong> means doing things in the right order. A game runs your steps one after another, exactly as you set them up — just like putting the robot's commands in order in Badge 1.</p>
+      <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>. Here's how each one shows up in a game:</p>
+      <p style="margin-top:16px;">📋 <strong>Sequence</strong> means doing things in the right order. A game runs your steps one after another, exactly as you set them up — just like putting the robot's commands in order in Badge 1.</p>
       <p>🔁 <strong>Loops</strong> repeat things again and again. Games are full of loops: an enemy patrols back and forth, a timer counts down, and the player keeps trying until they win — just like the <em>Repeat</em> block in Badge 1.</p>
       <p>❓ <strong>Conditionals</strong> let the game make choices with <em>IF</em>. <em>IF the robot has a key, THEN the door opens. IF every cookie is collected, THEN the player wins.</em> Without conditionals, every situation would be the same — pretty boring!</p>
       <div class="b2-callout">You'll build your game with these same three ideas from Badge 1 — <strong>sequence, loops, and conditionals</strong> — by snapping blocks together. Then a friend uses the <strong>arrow keys</strong> to play. That's exactly how real game design works!</div>
@@ -1697,15 +1697,56 @@ function b2CountBlocks(list) {
   return (list || []).reduce((n, b) => n + 1 + b2CountBlocks(b.body), 0);
 }
 /* gather everything the certificate shows from live state + saved answers */
+/* describe one code block as a short phrase for the certificate */
+function b2BlockPhrase(b) {
+  switch (b.type) {
+    case "whenPlay":  return "when ▶ Play is pressed";
+    case "whenKey":   return "when an arrow key is pressed";
+    case "whenTouch": {
+      const t = { C: `${B2.skin.C} item`, K: "🔑 key", D: "🚪 door", H: `${B2.skin.H} goal`, P: "start" }[b.tile] || "something";
+      return `when the robot touches the ${t}`;
+    }
+    case "move":      return "move";
+    case "collect":   return "pick it up 🎒";
+    case "openDoor":  return "open the door 🔓";
+    case "win":       return "win the game 🏆";
+    case "say":       return "show a message 💬";
+    case "ifKey":     return "if carrying a 🔑 key";
+    case "ifCookies": return `if all ${B2.skin.C} collected`;
+    default:          return "";
+  }
+}
+/* a short sentence for one top-level rule (its event + what it does) */
+function b2RuleText(hat) {
+  const acts = [];
+  (hat.body || []).forEach((b) => {
+    if (b.type === "ifKey" || b.type === "ifCookies") {
+      const inner = (b.body || []).map(b2BlockPhrase).filter(Boolean);
+      acts.push(b2BlockPhrase(b) + (inner.length ? " " + inner.join(", ") : ""));
+    } else {
+      const p = b2BlockPhrase(b);
+      if (p) acts.push(p);
+    }
+  });
+  return b2BlockPhrase(hat) + (acts.length ? " → " + acts.join(", ") : "");
+}
+/* does the script tree contain a block of this type anywhere? */
+function b2HasScriptType(list, type) {
+  return (list || []).some((b) => b.type === type || b2HasScriptType(b.body, type));
+}
 function b2CertData() {
   const s = b2ReadSettings();
   const g = B2.model.grid;
   const tally = (ch) => g.reduce((n, row) => n + row.filter((c) => c === ch).length, 0);
+  // challenges reflect what's actually in the built maze (not the plan checkboxes)
   const challenges = [];
-  if (b2Load("plan.b2-p-c1", "0") === "1") challenges.push("🧱 A winding path");
-  if (b2Load("plan.b2-p-c3", "0") === "1") challenges.push("🍪 Things to collect");
-  if (b2Load("plan.b2-p-c2", "0") === "1") challenges.push("🔑 Key & 🚪 locked door");
-  if (b2Load("plan.b2-p-c6", "0") === "1") challenges.push("💬 A pop-up message");
+  if (tally("C") > 0) challenges.push("🍪 Things to collect");
+  if (tally("K") > 0 || tally("D") > 0) challenges.push("🔑 Key & 🚪 locked door");
+  if (tally("B") > 0) challenges.push("📦 Blocks to push");
+  if (b2HasScriptType(B2.scripts, "say")) challenges.push("💬 A pop-up message");
+  // "a rule I coded" comes from the first real rule in the script canvas
+  const ruleHat = (B2.scripts || []).find((b) => Array.isArray(b.body) && b.body.length);
+  const codedRule = ruleHat ? b2RuleText(ruleHat) : "";
   let checks = 0;
   for (let i = 1; i <= 5; i++) if (b2Load(`share.b2-t${i}`, "0") === "1") checks++;
   return {
@@ -1715,7 +1756,7 @@ function b2CertData() {
     cookies: tally("C"), keys: tally("K"), doors: tally("D"),
     blocks: b2CountBlocks(B2.scripts),
     goal: b2Load("plan.b2-p-goal", ""),
-    rule: b2Load("plan.b2-p-rule", ""),
+    rule: codedRule,
     challenges,
     fav: b2Load("reflect.b2-r-game", ""),
     discover: b2Load("reflect.b2-r-discover", ""),
