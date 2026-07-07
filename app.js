@@ -469,7 +469,7 @@ function buildLevelPanel(idx) {
       <div class="box">
         <h3>Maze</h3>
         <div class="stage-wrap"><div class="grid" id="grid-${idx}"></div></div>
-        <p class="legend">🤖 robot with cookies 🍪 &nbsp;•&nbsp; 🏠 deliver here &nbsp;•&nbsp; dark = wall</p>
+        <p class="legend">🤖 robot with cookies 🍪 &nbsp;•&nbsp; 🏠 deliver here &nbsp;•&nbsp; 🧱 = wall</p>
       </div>
     </div>
   `;

@@ -452,7 +452,8 @@ body.dragging { user-select: none; -webkit-user-select: none; cursor: grabbing; 
   line-height: 1;
 }
 .cell.open { background: var(--open); }
-.cell.wall { background: var(--wall); }
+.cell.wall { background: var(--open); font-size: calc(var(--cell) * 0.92); }
+.cell.wall::before { content: "🧱"; }
 .cell.goal { background: #fff4c2; }
 .cell.start { background: #dcecff; }
 .cell.key { background: #fff4c2; animation: keyBob 1.2s ease-in-out infinite; }
