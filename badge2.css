@@ -50,7 +50,7 @@ body.view-badge-2 .tab[data-badge="1"] { display: none; }
 }
 .b2-intro-card h2 { color: var(--purple); margin-top: 0; }
 .b2-prose { line-height: 1.7; }
-.b2-prose p { margin: 0 0 12px; }
+.b2-prose p { margin: 0 0 4px; }
 .b2-plan-summary { margin: 0 0 16px; padding-left: 22px; }
 .b2-plan-summary li { margin-bottom: 4px; }
 
@@ -737,3 +737,134 @@ body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
   margin: 20px 0;
 }
 .b2-tip h3 { margin: 0 0 6px; }
+
+/* ============================================================
+   Finish stage — celebration, certificate, PDF/email actions
+   ============================================================ */
+.b2-finish-hero {
+  text-align: center;
+  background: linear-gradient(135deg, #f3e9fc, #fff6df);
+  border-radius: 18px;
+  padding: 22px 20px;
+  margin-bottom: 18px;
+}
+.b2-finish-hero h2 { color: var(--purple); margin: 6px 0 8px; }
+.b2-finish-emoji { font-size: 2.6rem; line-height: 1; }
+.b2-finish-name { max-width: 420px; margin: 0 auto 18px; text-align: center; }
+.b2-finish-name > label { display: block; text-align: center; }
+.b2-finish-name input { text-align: center; }
+
+/* ---- The certificate card (this is what gets rendered into the PDF) ---- */
+.b2-cert {
+  background: #fffdf8;
+  border: 3px double var(--purple);
+  border-radius: 16px;
+  padding: 22px 24px 18px;
+  margin: 12px 0 18px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+.b2-cert-ribbon {
+  text-align: center;
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: var(--purple);
+  letter-spacing: 0.02em;
+}
+.b2-cert-badge {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8a7ba0;
+  margin: 2px 0 12px;
+}
+.b2-cert-who { text-align: center; line-height: 1.5; margin: 0 0 16px; }
+.b2-cert-who b { font-size: 1.35rem; color: var(--purple); }
+.b2-cert-cols {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  border-top: 2px dashed #e7d9f4;
+  padding: 14px 0;
+}
+.b2-cert-cols h4 { margin: 0 0 8px; color: var(--purple); font-size: 0.98rem; }
+.b2-cert-board-wrap { text-align: center; }
+.b2-cert-grid {
+  display: grid;
+  gap: 1px;
+  background: #d9c8ec;
+  border: 2px solid #d9c8ec;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0 auto;
+  width: max-content;
+  line-height: 1;
+}
+.b2-cert-cell {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5eefc;
+}
+.b2-cert-cell.wall { background: #3a2c4a; }
+.b2-cert-msgs {
+  font-size: 0.85rem;
+  text-align: left;
+  padding: 12px 0 14px;
+  border-bottom: 2px dashed #e7d9f4;
+}
+.b2-cert-msgs p { margin: 4px 0; line-height: 1.4; }
+.b2-cert-facts ul { list-style: none; margin: 0; padding: 0; }
+.b2-cert-facts li {
+  padding: 5px 0;
+  border-bottom: 1px solid #f0e8fa;
+  font-size: 0.9rem;
+}
+.b2-cert-section { padding: 14px 0 4px; }
+.b2-cert-section h4 { margin: 0 0 10px; color: var(--purple); font-size: 0.98rem; }
+.b2-cert-answer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px 0;
+  margin-bottom: 8px;
+}
+.b2-cert-answer b { font-size: 0.82rem; color: #6b5d7d; }
+.b2-cert-answer span { font-size: 0.92rem; line-height: 1.4; }
+.b2-cert-skills { border-top: 2px dashed #e7d9f4; padding-top: 12px; }
+.b2-cert-skills h4 { margin: 0 0 8px; color: var(--purple); font-size: 0.98rem; }
+.b2-cert-skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.b2-cert-skill-chips span {
+  background: #f3e9fc;
+  border: 1.5px solid var(--purple-light);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--purple);
+}
+.b2-cert-foot {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #8a7ba0;
+  padding-top: 24px;
+}
+@media (max-width: 560px) {
+  .b2-cert-cols { grid-template-columns: 1fr; }
+}
+
+/* ---- Certificate actions (Save as PDF / email) ---- */
+.b2-cert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 4px;
+}
+.b2-cert-status { font-weight: 700; font-size: 0.9rem; margin: 8px 0 0; min-height: 1.2em; }
+.b2-cert-status.is-working { color: var(--purple); }
+.b2-cert-status.is-ok { color: #2e7d32; }
+.b2-cert-status.is-bad { color: #c0392b; }

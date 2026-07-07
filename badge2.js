@@ -1024,36 +1024,39 @@ function b2DecodeGame(code) {
 /* embed the user's built game (board + the code they wrote) as a playable
    mini-app: a same-origin iframe that loads this page in "embed" mode with
    the game encoded in the hash, reusing the whole engine + shared-play flow */
-let _b2EmbedReady = false; // true once the iframe has fully loaded once
-function b2RefreshEmbed() {
-  const frame = document.getElementById("b2-embed-frame");
-  const empty = document.getElementById("b2-embed-empty");
+/* refresh a play-embed iframe (Share and Finish each have one). Loads the
+   game the first time, then pushes updates via postMessage without reloading.
+   The per-frame "loaded once" flag lives on the element (frame._b2Ready). */
+function b2RefreshEmbedFrame(frameId, emptyId) {
+  const frame = document.getElementById(frameId);
+  const empty = emptyId ? document.getElementById(emptyId) : null;
   if (!frame || !B2.model) return;
   const ready = !!(b2FindChar(B2.model.grid, "P") && b2FindChar(B2.model.grid, "H"));
   frame.hidden = !ready;
   if (empty) empty.hidden = ready;
   if (!ready) {
     frame.src = "about:blank";
-    _b2EmbedReady = false;
+    frame._b2Ready = false;
     return;
   }
   const code = b2EncodeGame();
-  if (_b2EmbedReady) {
-    // iframe already loaded — push the update without reloading
+  if (frame._b2Ready) {
     frame.contentWindow.postMessage({ type: "b2update", code }, location.origin);
   } else {
     frame.src = `${location.pathname}?embed=1#play=${code}`;
-    frame.onload = () => { _b2EmbedReady = true; };
+    frame.onload = () => { frame._b2Ready = true; };
   }
 }
+function b2RefreshEmbed()  { b2RefreshEmbedFrame("b2-embed-frame",  "b2-embed-empty"); }
+function b2RefreshFinish() { b2RefreshEmbedFrame("b2-finish-frame", "b2-finish-empty"); }
 
 let _b2EmbedTimer = null;
 function b2ScheduleEmbedRefresh() {
   if (B2.fromShared) return;
-  const frame = document.getElementById("b2-embed-frame");
-  if (!frame) return; // Share tab not rendered yet
+  // refresh whichever play frames are currently rendered
+  if (!document.getElementById("b2-embed-frame") && !document.getElementById("b2-finish-frame")) return;
   clearTimeout(_b2EmbedTimer);
-  _b2EmbedTimer = setTimeout(b2RefreshEmbed, 600);
+  _b2EmbedTimer = setTimeout(() => { b2RefreshEmbed(); b2RefreshFinish(); }, 600);
 }
 
 function b2OpenShared(code) {
@@ -1158,7 +1161,7 @@ function b2BuildDiscover() {
       </div>
     </div>`).join("");
   return `
-    <div class="level-head"><h2>Step 1 — Discover</h2><span class="difficulty easy">Game design for good</span></div>
+    <div class="level-head"><h2>Step 1 — Discover</h2></div>
     <div class="b2-intro-card b2-prose">
       <p>You've learned how computers helped astronauts land on the Moon 🚀. Did you know <strong>real video games</strong> have helped people too — solving science mysteries, fighting disease, and even designing neighborhoods?</p>
       <p>Here are real games and projects that did good in the world. <strong>Tap any card</strong> to flip it over and read more about it!</p>
@@ -1174,7 +1177,7 @@ function b2BuildDiscover() {
 
 function b2BuildExplore() {
   return `
-    <div class="level-head"><h2>Step 2 — Explore</h2><span class="difficulty easy">How games think</span></div>
+    <div class="level-head"><h2>Step 2 — Explore</h2></div>
     <div class="b2-intro-card b2-prose">
       <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>. Here's how each one shows up in a game:</p>
       <p>📋 <strong>Sequence</strong> means doing things in the right order. A game runs your steps one after another, exactly as you set them up — just like putting the robot's commands in order in Badge 1.</p>
@@ -1244,7 +1247,7 @@ function b2PlanPeekBlocksHTML() {
 
 function b2BuildPlan() {
   return `
-    <div class="level-head"><h2>Step 3 — Plan</h2><span class="difficulty medium">Plan your maze game</span></div>
+    <div class="level-head"><h2>Step 3 — Plan</h2></div>
     <div class="b2-intro-card b2-prose">
       <p>Game makers <strong>plan</strong> before they build. That's part of the <em>game design process</em>: plan → build → test → improve → share. Use the reference below, then fill in your plan — you'll use it in the next step!</p>
 
@@ -1298,7 +1301,7 @@ function b2BuildPlan() {
 function b2BuildBuild() {
   const sizes = B2_SIZES.map((n) => `<option value="${n}"${n === B2_DEFAULT_SIZE ? " selected" : ""}>${n} × ${n}</option>`).join("");
   return `
-    <div class="level-head"><h2>Step 4 — Build &amp; Test</h2><span class="difficulty medium">Make it real</span></div>
+    <div class="level-head"><h2>Step 4 — Build &amp; Test</h2></div>
 
     <div class="b2-rotate-gate">
       <span class="b2-rotate-gate-emoji">🔄📱</span>
@@ -1417,7 +1420,7 @@ function b2BuildBuild() {
 
 function b2BuildShare() {
   return `
-    <div class="level-head"><h2>Step 5 — Share &amp; Improve</h2><span class="difficulty medium">Iterate!</span></div>
+    <div class="level-head"><h2>Step 5 — Share &amp; Improve</h2></div>
     <div class="b2-intro-card b2-prose">
       <p>The best part of a big project is <strong>sharing</strong> it. When people play your game, you see what they enjoy — and get ideas to make it better. Even after a game comes out, makers keep improving it. That's <em>iteration</em>!</p>
 
@@ -1446,8 +1449,47 @@ function b2BuildShare() {
       <div class="b2-tip"><h3>Keep going! 💪</h3>
         <p>Making something new takes <strong>perseverance</strong>. Every great game maker tries again and again. If at first you don't succeed: try, try again!</p></div>
 
-      <h3 style="color:var(--purple);">🎉 You earned it!</h3>
+      <h3 style="color:var(--purple);">🎉 Almost there!</h3>
       <p>Now you know how games are <strong>planned, built, tested, and improved</strong>. Give service by teaching a friend the game design process, or by sharing games that help science and health research.</p>
+      <button class="btn btn-primary" data-b2goto="b2-finish" style="margin-top:8px;">Next: Finish &amp; celebrate 🏆 →</button>
+    </div>`;
+}
+
+function b2BuildFinish() {
+  return `
+    <div class="level-head"><h2>🏆 Finish — You did it!</h2><span class="difficulty easy">Badge earned</span></div>
+    <div class="b2-intro-card b2-prose">
+      <div class="b2-finish-hero">
+        <div class="b2-finish-emoji">🎉🏅🎮</div>
+        <h2>Congratulations, Game Designer!</h2>
+        <p>You planned, built, tested, and shared your very own maze game. That's the whole <strong>game design process</strong> — you've earned your <strong>Digital Game Design</strong> badge! 🌟</p>
+      </div>
+
+      <div class="field b2-finish-name">
+        <label for="b2-cert-name-input">✏️ Your name (for your certificate)</label>
+        <input type="text" id="b2-cert-name-input" placeholder="Type your name here" />
+      </div>
+
+      <h3 style="color:var(--purple);">🎮 Play your finished game</h3>
+      <p>Take a victory lap — play the game you made! (It updates from your latest work in the Build step.)</p>
+      <div class="b2-embed-wrap">
+        <iframe id="b2-finish-frame" class="b2-embed-frame" title="Your finished game — play it here"></iframe>
+      </div>
+      <p class="b2-embed-empty" id="b2-finish-empty" hidden>Add a 🤖 player start and a 🏠 goal in the <strong>Build</strong> step, then come back to play your game here.</p>
+
+      <h3 style="color:var(--purple); margin-top:22px;">📜 Your certificate</h3>
+      <p>Here's a summary of everything you learned and made. Save it as a PDF or send it to a grown-up's email!</p>
+
+      <div class="b2-cert" id="b2-cert"><!-- filled by b2RenderCertificate() --></div>
+
+      <div class="b2-cert-actions">
+        <button class="btn btn-primary" id="b2-cert-download">⬇ Save my certificate as a PDF</button>
+      </div>
+      <p class="b2-cert-status" id="b2-cert-status" role="status" aria-live="polite"></p>
+      <p class="b2-saved-note">Tip: you can print or email the saved PDF to a grown-up or your troop leader. 💾</p>
+
+      <div class="b2-tip"><h3>Keep creating! 💪</h3>
+        <p>Every game maker started with a first game. Teach a friend the game design process, or dream up your next game — the world needs more games for good!</p></div>
     </div>`;
 }
 
@@ -1461,6 +1503,7 @@ const B2_TABS = [
   { target: "b2-plan",     num: "3",  label: "Plan",     build: b2BuildPlan     },
   { target: "b2-build",    num: "4",  label: "Build",    build: b2BuildBuild    },
   { target: "b2-share",    num: "5",  label: "Share",    build: b2BuildShare    },
+  { target: "b2-finish",   num: "🏆", label: "Finish",   build: b2BuildFinish   },
 ];
 
 function b2WireBuild() {
@@ -1575,6 +1618,183 @@ function b2WireShare() {
   b2Autosave(document.getElementById("b2-improve"), "share.improve");
 }
 
+/* ============================================================
+   Finish stage — certificate, PDF, and email
+   ============================================================ */
+function b2Esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+/* count every block in the script tree (for the certificate stats) */
+function b2CountBlocks(list) {
+  return (list || []).reduce((n, b) => n + 1 + b2CountBlocks(b.body), 0);
+}
+/* gather everything the certificate shows from live state + saved answers */
+function b2CertData() {
+  const s = b2ReadSettings();
+  const g = B2.model.grid;
+  const tally = (ch) => g.reduce((n, row) => n + row.filter((c) => c === ch).length, 0);
+  const challenges = [];
+  if (b2Load("plan.b2-p-c1", "0") === "1") challenges.push("🧱 A winding path");
+  if (b2Load("plan.b2-p-c3", "0") === "1") challenges.push("🍪 Things to collect");
+  if (b2Load("plan.b2-p-c2", "0") === "1") challenges.push("🔑 Key & 🚪 locked door");
+  if (b2Load("plan.b2-p-c6", "0") === "1") challenges.push("💬 A pop-up message");
+  let checks = 0;
+  for (let i = 1; i <= 5; i++) if (b2Load(`share.b2-t${i}`, "0") === "1") checks++;
+  return {
+    name: (b2Load("finish.name", "") || "").trim(),
+    title: s.title, intro: s.intro, win: s.win,
+    cols: B2.model.cols, rows: B2.model.rows,
+    cookies: tally("C"), keys: tally("K"), doors: tally("D"),
+    blocks: b2CountBlocks(B2.scripts),
+    goal: b2Load("plan.b2-p-goal", ""),
+    rule: b2Load("plan.b2-p-rule", ""),
+    challenges,
+    fav: b2Load("reflect.b2-r-game", ""),
+    discover: b2Load("reflect.b2-r-discover", ""),
+    improve: b2Load("share.improve", ""),
+    checks,
+  };
+}
+/* a static snapshot of the current maze (emoji cells) for the certificate */
+function b2CertBoardHTML() {
+  const { grid, cols, rows } = B2.model;
+  const cell = Math.max(13, Math.min(30, Math.floor(280 / cols)));
+  let cells = "";
+  for (let y = 0; y < rows; y++)
+    for (let x = 0; x < cols; x++) {
+      const v = b2CellVisual(grid[y][x]);
+      cells += `<div class="b2-cert-cell ${v.cls}">${v.txt}</div>`;
+    }
+  return `<div class="b2-cert-grid" style="grid-template-columns:repeat(${cols},${cell}px);font-size:${Math.round(cell * 0.62)}px">${cells}</div>`;
+}
+function b2RenderCertificate() {
+  const host = document.getElementById("b2-cert");
+  if (!host || !B2.model) return;
+  const d = b2CertData();
+  const who = d.name || "a Game Designer";
+  const date = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+  const answer = (label, val) =>
+    `<div class="b2-cert-answer"><b>${label}</b><span>${val ? b2Esc(val) : "—"}</span></div>`;
+  host.innerHTML = `
+    <div class="b2-cert-ribbon">🏆 Certificate of Achievement 🏆</div>
+    <p class="b2-cert-badge">Girl Scouts Junior · Digital Game Design</p>
+    <p class="b2-cert-who">This certifies that<br><b id="b2-cert-name">${b2Esc(who)}</b><br>
+      designed and built an original maze game!</p>
+
+    <div class="b2-cert-cols">
+      <div class="b2-cert-board-wrap">
+        <h4>🎮 “${b2Esc(d.title)}”</h4>
+        ${b2CertBoardHTML()}
+      </div>
+      <div class="b2-cert-facts">
+        <h4>My game by the numbers</h4>
+        <ul>
+          <li>📐 Maze size: <b>${d.cols} × ${d.rows}</b></li>
+          <li>🍪 Items to collect: <b>${d.cookies}</b></li>
+          <li>🔑 Keys: <b>${d.keys}</b> · 🚪 Doors: <b>${d.doors}</b></li>
+          <li>🧩 Code blocks I snapped: <b>${d.blocks}</b></li>
+          <li>🧪 Playtest checks passed: <b>${d.checks} of 5</b></li>
+        </ul>
+      </div>
+    </div>
+    <div class="b2-cert-msgs">
+      <p><b>Start message:</b> ${b2Esc(d.intro)}</p>
+      <p><b>Win message:</b> ${b2Esc(d.win)}</p>
+    </div>
+
+    <div class="b2-cert-section">
+      <h4>📝 What I planned & learned</h4>
+      ${answer("🏁 Goal of my game:", d.goal)}
+      ${answer("⚙️ A rule I coded:", d.rule)}
+      ${answer("🧩 Challenges I added:", d.challenges.join(" · "))}
+      ${answer("🎮 A game I explored:", d.fav)}
+      ${answer("🌍 A game-for-good that inspired me:", d.discover)}
+      ${answer("🔁 My next idea (iteration):", d.improve)}
+    </div>
+
+    <div class="b2-cert-skills">
+      <h4>⭐ Skills I practiced</h4>
+      <div class="b2-cert-skill-chips">
+        <span>📋 Sequence</span><span>🔁 Loops</span><span>❓ Conditionals</span>
+        <span>🗺️ Maze design</span><span>🧩 Event scripting</span>
+        <span>🔄 Plan → Build → Test → Improve → Share</span>
+      </div>
+    </div>
+
+    <p class="b2-cert-foot">🤖 Coding for Good · ${b2Esc(date)}</p>`;
+}
+/* ---- PDF generation (libraries loaded on demand from a CDN) ---- */
+const B2_H2C_URL   = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+const B2_JSPDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+function b2LoadScript(src) {
+  return new Promise((resolve, reject) => {
+    if ([...document.scripts].some((s) => s.src === src)) return resolve();
+    const el = document.createElement("script");
+    el.src = src;
+    el.onload = () => resolve();
+    el.onerror = () => reject(new Error("Failed to load " + src));
+    document.head.appendChild(el);
+  });
+}
+/* rasterize the certificate card and wrap it in a one-page PDF.
+   Reads current state each call, so the maze/messages are always up to date. */
+async function b2BuildCertPdf() {
+  b2RenderCertificate(); // ensure it reflects the latest maze + answers
+  const cert = document.getElementById("b2-cert");
+  await b2LoadScript(B2_H2C_URL);
+  await b2LoadScript(B2_JSPDF_URL);
+  // scale ~1.6 is crisp enough for a certificate while keeping the file small
+  // (email attachments must stay well under a couple MB); JPEG + PDF stream
+  // compression shrink it much further than PNG.
+  const canvas = await window.html2canvas(cert, { scale: 1.6, backgroundColor: "#ffffff", useCORS: true });
+  const img = canvas.toDataURL("image/jpeg", 0.9);
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4", compress: true });
+  const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+  const margin = 24;
+  const ratio = Math.min((pw - margin * 2) / canvas.width, (ph - margin * 2) / canvas.height);
+  const w = canvas.width * ratio, h = canvas.height * ratio;
+  pdf.addImage(img, "JPEG", (pw - w) / 2, margin, w, h);
+  return { blob: pdf.output("blob"), base64: pdf.output("datauristring").split(",")[1] };
+}
+function b2CertFileName() {
+  const d = b2CertData();
+  const who = (d.name || "my").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my";
+  return `${who}-game-design-certificate.pdf`;
+}
+function b2CertStatus(msg, kind) {
+  const el = document.getElementById("b2-cert-status");
+  if (!el) return;
+  el.textContent = msg || "";
+  el.className = "b2-cert-status" + (kind ? " is-" + kind : "");
+}
+async function b2DownloadCertificatePdf() {
+  b2CertStatus("Building your certificate PDF…", "working");
+  try {
+    const { blob } = await b2BuildCertPdf();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = b2CertFileName();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    b2CertStatus("Saved! Check your downloads for your certificate. 🎉", "ok");
+  } catch (e) {
+    b2CertStatus("Sorry — couldn't build the PDF. Check your internet and try again.", "bad");
+  }
+}
+function b2WireFinish() {
+  const nameEl = document.getElementById("b2-cert-name-input");
+  b2Autosave(nameEl, "finish.name");
+  if (nameEl) nameEl.addEventListener("input", () => {
+    const t = document.getElementById("b2-cert-name");
+    if (t) t.textContent = nameEl.value.trim() || "a Game Designer";
+  });
+  const dl = document.getElementById("b2-cert-download");
+  if (dl) dl.addEventListener("click", b2DownloadCertificatePdf);
+  b2RenderCertificate();
+}
+
 /* Discover step: flip the "games for good" cards on click / Enter / Space.
    Clicks on a link inside a card fall through so the source opens normally. */
 function b2WireDiscover() {
@@ -1630,6 +1850,7 @@ function b2Init() {
       orig(id);
       if (id === "b2-build") requestAnimationFrame(b2FitGrid);
       if (id === "b2-share") b2RefreshEmbed();
+      if (id === "b2-finish") { b2RefreshFinish(); b2RenderCertificate(); }
       B2_SESSION.savePlace(id);
       B2_SESSION.markVisited(id);
       b2MarkVisitedTabs();
@@ -1699,6 +1920,7 @@ function b2Init() {
   b2WireShare();
   b2WireReflections();
   b2WireDiscover();
+  b2WireFinish();
   b2RenderEditor();
   const sizeSel = document.getElementById("b2-size");
   if (sizeSel) sizeSel.value = String(B2.model.cols);
