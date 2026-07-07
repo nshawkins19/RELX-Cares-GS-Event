@@ -1518,11 +1518,12 @@ function b2BuildFinish() {
       <h3 style="color:var(--purple);">🎮 Play your finished game</h3>
       <p>Take a victory lap — play the game you made! (It updates from your latest work in the Build step.)</p>
       <div class="b2-embed-wrap">
-        <iframe id="b2-finish-frame" class="b2-embed-frame" title="Your finished game — play it here"></iframe>
+        <iframe id="b2-finish-frame" class="b2-embed-frame" scrolling="no" title="Your finished game — play it here"></iframe>
       </div>
       <p class="b2-embed-empty" id="b2-finish-empty" hidden>Add a 🤖 player start and a 🏠 goal in the <strong>Build</strong> step, then come back to play your game here.</p>
 
-      <h3 style="color:var(--purple); margin-top:22px;">📜 Your certificate</h3>
+      <hr class="b2-finish-divider" />
+      <h3 style="color:var(--purple);">📜 Your certificate</h3>
       <p>Here's a summary of everything you learned and made. Save it as a PDF or send it to a grown-up's email!</p>
 
       <div class="b2-cert" id="b2-cert"><!-- filled by b2RenderCertificate() --></div>
@@ -1723,16 +1724,34 @@ function b2CertData() {
   };
 }
 /* a static snapshot of the current maze (emoji cells) for the certificate */
+const B2_CERT_CELL_MIN = 16, B2_CERT_CELL_MAX = 58;
+function b2CertCellSize(cols) {
+  return Math.max(B2_CERT_CELL_MIN, Math.min(B2_CERT_CELL_MAX, Math.floor(560 / cols)));
+}
 function b2CertBoardHTML() {
   const { grid, cols, rows } = B2.model;
-  const cell = Math.max(13, Math.min(30, Math.floor(280 / cols)));
+  const cell = b2CertCellSize(cols); // fallback; refined by b2FitCertBoard() once laid out
   let cells = "";
   for (let y = 0; y < rows; y++)
     for (let x = 0; x < cols; x++) {
       const v = b2CellVisual(grid[y][x]);
       cells += `<div class="b2-cert-cell ${v.cls}">${v.txt}</div>`;
     }
-  return `<div class="b2-cert-grid" style="grid-template-columns:repeat(${cols},${cell}px);font-size:${Math.round(cell * 0.62)}px">${cells}</div>`;
+  return `<div class="b2-cert-grid" id="b2-cert-grid" data-cols="${cols}" style="grid-template-columns:repeat(${cols},${cell}px);font-size:${Math.round(cell * 0.62)}px">${cells}</div>`;
+}
+/* grow the certificate maze to fill the width left over beside the facts column
+   (measured once the board's column is laid out; keeps square px cells so the
+   PDF rasterizer renders it crisply). Falls back to b2CertCellSize when hidden. */
+function b2FitCertBoard() {
+  const grid = document.getElementById("b2-cert-grid");
+  if (!grid) return;
+  const wrap = grid.parentElement; // .b2-cert-board-wrap — the flexible column
+  const avail = wrap ? wrap.clientWidth : 0;
+  const cols = +grid.dataset.cols;
+  if (!avail || !cols) return; // panel hidden / not laid out yet → keep fallback
+  const cell = Math.max(B2_CERT_CELL_MIN, Math.min(B2_CERT_CELL_MAX, Math.floor((avail - (cols - 1) - 4) / cols)));
+  grid.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
+  grid.style.fontSize = Math.round(cell * 0.62) + "px";
 }
 function b2RenderCertificate() {
   const host = document.getElementById("b2-cert");
@@ -1744,7 +1763,7 @@ function b2RenderCertificate() {
     `<div class="b2-cert-answer"><b>${label}</b><span>${val ? b2Esc(val) : "—"}</span></div>`;
   host.innerHTML = `
     <div class="b2-cert-ribbon">🏆 Certificate of Achievement 🏆</div>
-    <p class="b2-cert-badge">Girl Scouts Junior · Digital Game Design</p>
+    <p class="b2-cert-badge">Girl Scouts · Junior Coding For Good · Digital Game Design</p>
     <p class="b2-cert-who">This certifies that<br><b id="b2-cert-name">${b2Esc(who)}</b><br>
       designed and built an original maze game!</p>
 
@@ -1790,6 +1809,7 @@ function b2RenderCertificate() {
     </div>
 
     <p class="b2-cert-foot">🤖 Coding for Good · ${b2Esc(date)}</p>`;
+  b2FitCertBoard();
 }
 /* ---- PDF generation (libraries loaded on demand from a CDN) ---- */
 const B2_H2C_URL   = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -1806,23 +1826,39 @@ function b2LoadScript(src) {
 }
 /* rasterize the certificate card and wrap it in a one-page PDF.
    Reads current state each call, so the maze/messages are always up to date. */
+const B2_A4_RATIO = 297 / 210; // portrait A4 height / width
 async function b2BuildCertPdf() {
   b2RenderCertificate(); // ensure it reflects the latest maze + answers
   const cert = document.getElementById("b2-cert");
   await b2LoadScript(B2_H2C_URL);
   await b2LoadScript(B2_JSPDF_URL);
+  // Render the card at a width chosen so its aspect ratio matches A4 — then the
+  // rasterized image fills the whole sheet (full bleed) with no distortion.
+  // Two passes: measure the natural height, solve width = height / A4-ratio, then
+  // re-measure since reflow shifts the height slightly.
+  const prevWidth = cert.style.width;
+  const solveWidth = () => {
+    const h = cert.getBoundingClientRect().height;
+    cert.style.width = Math.round(h / B2_A4_RATIO) + "px";
+    b2FitCertBoard();
+  };
+  cert.style.width = "900px"; b2FitCertBoard();
+  solveWidth(); solveWidth();
   // scale ~1.6 is crisp enough for a certificate while keeping the file small
   // (email attachments must stay well under a couple MB); JPEG + PDF stream
   // compression shrink it much further than PNG.
-  const canvas = await window.html2canvas(cert, { scale: 1.6, backgroundColor: "#ffffff", useCORS: true });
+  let canvas;
+  try {
+    canvas = await window.html2canvas(cert, { scale: 1.6, backgroundColor: "#ffffff", useCORS: true });
+  } finally {
+    cert.style.width = prevWidth; // restore the responsive on-screen preview
+    b2FitCertBoard();
+  }
   const img = canvas.toDataURL("image/jpeg", 0.9);
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4", compress: true });
   const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
-  const margin = 24;
-  const ratio = Math.min((pw - margin * 2) / canvas.width, (ph - margin * 2) / canvas.height);
-  const w = canvas.width * ratio, h = canvas.height * ratio;
-  pdf.addImage(img, "JPEG", (pw - w) / 2, margin, w, h);
+  pdf.addImage(img, "JPEG", 0, 0, pw, ph); // full-bleed: the certificate covers the whole page
   return { blob: pdf.output("blob"), base64: pdf.output("datauristring").split(",")[1] };
 }
 function b2CertFileName() {
@@ -1859,6 +1895,7 @@ function b2WireFinish() {
   });
   const dl = document.getElementById("b2-cert-download");
   if (dl) dl.addEventListener("click", b2DownloadCertificatePdf);
+  window.addEventListener("resize", () => { if (document.getElementById("b2-cert-grid")) b2FitCertBoard(); });
   b2RenderCertificate();
 }
 
