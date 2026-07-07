@@ -85,7 +85,6 @@ const GAMES_FOR_GOOD = [
 /* maze-builder paint tools */
 const B2_TOOLS = [
   { key: "wall",   label: "🧱 Wall" },
-  { key: "erase",  label: "🗑️ Erase" },
   { key: "cookie", label: "🍪 Cookie" },
   { key: "key",    label: "🔑 Key" },
   { key: "door",   label: "🚪 Door" },
@@ -106,7 +105,7 @@ const B2_MAX_CELL = 84;
    mechanics are identical no matter which emoji is chosen. */
 const B2_SKINS = {
   P: { label: "Player", options: ["🤖", "🤿", "👩‍🌾", "🧑‍🚀", "🧑‍⚕️", "🧑‍🚒"] },
-  C: { label: "Item",   options: ["🍪", "🗑️", "🥕", "🐶", "💊"] },
+  C: { label: "Item",   options: ["🍪", "🥫", "🥕", "🐶", "💊"] },
   H: { label: "Goal",   options: ["🏠", "♻️", "🧺", "🐾", "🛰️", "🏥"] },
 };
 const B2_DEFAULT_SKIN = { P: "🤖", C: "🍪", H: "🏠" };
@@ -398,7 +397,7 @@ function b2ToolsHTML() {
 function b2RenderTools() {
   const el = document.getElementById("b2-tools");
   if (el) el.innerHTML = b2ToolsHTML();
-  document.querySelectorAll("#b2-tools [data-b2tool]").forEach((x) =>
+  document.querySelectorAll("#b2-design [data-b2tool]").forEach((x) =>
     x.classList.toggle("is-active", x.dataset.b2tool === B2.tool));
 }
 function b2RenderLegend() {
@@ -419,7 +418,7 @@ function b2TouchTileOpts() {
 const B2_SKIN_NAMES = {
   "🤖": "Robot", "🤿": "Diver", "👩‍🌾": "Farmer", "🧑‍🚀": "Astronaut", "🧑‍⚕️": "Doctor", "🧑‍🚒": "Firefighter",
   "🏠": "House", "♻️": "Recycle", "🧺": "Laundry", "🐾": "Paw", "🛰️": "Satellite", "🏥": "Hospital",
-  "🍪": "Cookie", "🗑️": "Trash", "🥕": "Carrot", "🐶": "Puppy", "💊": "Pill",
+  "🍪": "Cookie", "🥫": "Soda can", "🥕": "Carrot", "🐶": "Puppy", "💊": "Pill",
 };
 function b2RenderSkinSelectors() {
   Object.keys(B2_SKINS).forEach((role) => {
@@ -540,6 +539,27 @@ function b2SetSize(n) {
 
 function b2Msg(kind, text) { setMsg(b2game, kind, text); }
 
+/* "show message" action: pop the text briefly ON TOP of the maze (a toast),
+   instead of in the bar under it. Auto-fades after a short moment. */
+let _b2SayTimer = null;
+function b2SayToast(text) {
+  const grid = document.getElementById("grid-b2");
+  const wrap = grid && grid.closest(".stage-wrap");
+  if (!wrap) { b2Msg("info", text); return; }
+  let toast = wrap.querySelector(".b2-say-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.className = "b2-say-toast";
+    wrap.appendChild(toast);
+  }
+  toast.textContent = text;
+  toast.classList.remove("show");
+  void toast.offsetWidth; // restart the fade-in even for back-to-back messages
+  toast.classList.add("show");
+  clearTimeout(_b2SayTimer);
+  _b2SayTimer = setTimeout(() => toast.classList.remove("show"), 1900);
+}
+
 function b2SetDesignDisabled(disabled) {
   document.querySelectorAll("#b2-design .maze-tool, #b2-design select").forEach((el) => (el.disabled = disabled));
   const box = document.getElementById("b2-scripts-box");
@@ -591,7 +611,7 @@ function b2RunBlock(block) {
     case "move":      return b2DoMove(block.dir);
     case "collect":   b2DoCollect();  return "ok";
     case "openDoor":  b2DoOpenDoor(); return "ok";
-    case "say":       if (block.text) b2Msg("info", block.text); return "ok";
+    case "say":       if (block.text) b2SayToast(block.text); return "ok";
     case "win":       return "win";
     case "ifKey":     return b2ps.keys > 0 ? b2RunBody(block.body) : "ok";
     case "ifCookies": return b2ps.cookies >= b2ps.totalCookies ? b2RunBody(block.body) : "ok";
@@ -1255,8 +1275,8 @@ function b2BuildPlan() {
       <ul class="b2-plan-summary">
         <li>You draw the maze and decide what's in it — cookies to grab, plus keys and locked doors.</li>
         <li>You write simple snap-together rules, like <em>WHEN the robot touches the cookie → pick it up</em>, that decide what each piece does.</li>
-        <li>Once it's built, a friend can play your finished game with just the arrow keys — no coding required on their end.</li>
-        <li>You can send them a link so they can try it right in their browser.</li>
+        <li>Then you hand your device to another Girl Scout, who <strong>playtests</strong> your game with just the arrow keys — no coding needed to play.</li>
+        <li>You use her feedback to <strong>improve</strong> your maze, and test again — that's <em>iteration</em>! Keep going until it's just right.</li>
       </ul>
 
       <details class="b2-guide b2-plan-peek" open>
@@ -1366,8 +1386,9 @@ function b2BuildBuild() {
               <select class="cond-select" id="b2-size">${sizes}</select>
               <button class="maze-tool random" id="b2-random">🎲 Random</button>
               <button class="maze-tool alt" id="b2-clear-maze">✖ Clear Maze</button>
+              <button class="maze-tool" data-b2tool="erase">🧽 Erase</button>
             </div>
-            <div class="maze-tools b2-tools-with-erase" id="b2-tools">${b2ToolsHTML()}</div>
+            <div class="maze-tools" id="b2-tools">${b2ToolsHTML()}</div>
             <div class="b2-skins" id="b2-skins">
               <span class="size-label">Icons:</span>
               <label>Player <select class="cond-select" id="b2-skin-P"></select></label>
@@ -1414,7 +1435,7 @@ function b2BuildBuild() {
         </div>
       </div>
     </div>
-    <button class="btn btn-primary" data-b2goto="b2-share" style="margin-top:18px;">Next: Share &amp; improve →</button>
+    <button class="btn btn-primary" data-b2goto="b2-share">Next: Share &amp; improve →</button>
     </div>`;
 }
 
@@ -1464,6 +1485,7 @@ function b2BuildShare() {
           <label for="b2-improve" style="margin-top:12px;">🔧 What is <em>one thing</em> that could be even better?</label>
           <textarea id="b2-improve" rows="2" placeholder="One idea to make it better…"></textarea>
         </div>
+        <button class="maze-tool alt b2-clear-feedback" id="b2-clear-feedback" type="button">🧹 Clear feedback for a new tester</button>
       </div>
 
       <div class="b2-callout">🎨 <b>Game maker:</b> read your playtester's feedback, then use it to make your maze better!</div>
@@ -1530,18 +1552,19 @@ const B2_TABS = [
 ];
 
 function b2WireBuild() {
-  // delegated tool-pick handler (survives re-rendering the tools on icon change)
-  const toolsEl = document.getElementById("b2-tools");
-  toolsEl.addEventListener("click", (e) => {
+  // delegated tool-pick handler on #b2-design (survives re-rendering the tools
+  // on icon change, and covers the Erase button that now lives in the size row)
+  const designEl = document.getElementById("b2-design");
+  const syncToolActive = () => designEl.querySelectorAll("[data-b2tool]").forEach((x) =>
+    x.classList.toggle("is-active", x.dataset.b2tool === B2.tool));
+  designEl.addEventListener("click", (e) => {
     const b = e.target.closest("[data-b2tool]");
     if (!b || b2game.playing) return;
     B2.tool = b.dataset.b2tool;
-    toolsEl.querySelectorAll("[data-b2tool]").forEach((x) =>
-      x.classList.toggle("is-active", x.dataset.b2tool === B2.tool));
+    syncToolActive();
     if (!B2.fromShared) b2RenderEditor();
   });
-  toolsEl.querySelectorAll("[data-b2tool]").forEach((x) =>
-    x.classList.toggle("is-active", x.dataset.b2tool === B2.tool));
+  syncToolActive();
 
   // icon pickers (player / item / goal / key / door)
   Object.keys(B2_SKINS).forEach((role) => {
@@ -1640,6 +1663,24 @@ function b2WireShare() {
     b2AutosaveCheck(document.getElementById(id), `share.${id}`));
   b2Autosave(document.getElementById("b2-liked"), "share.liked");
   b2Autosave(document.getElementById("b2-improve"), "share.improve");
+  const clearBtn = document.getElementById("b2-clear-feedback");
+  if (clearBtn) clearBtn.addEventListener("click", b2ClearTesterFeedback);
+}
+
+/* wipe the last tester's feedback so a new tester can start fresh after the
+   game maker has improved the maze */
+function b2ClearTesterFeedback() {
+  ["b2-t1", "b2-t2", "b2-t3", "b2-t4", "b2-t5"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+    b2Save(`share.${id}`, "0");
+  });
+  ["b2-liked", "b2-improve"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  b2Save("share.liked", "");
+  b2Save("share.improve", "");
 }
 
 /* ============================================================
@@ -1861,6 +1902,12 @@ function b2SwitchBadge(n) {
     footer.innerHTML = n === 2
       ? 'Built for the Girl Scouts <em>Junior Coding for Good</em> — Badge 2: Game Design.'
       : 'Built for the Girl Scouts <em>Junior Coding for Good</em> — Badge 1: Coding Basics.';
+  }
+  const tagline = document.querySelector(".site-header .tagline");
+  if (tagline) {
+    tagline.innerHTML = n === 2
+      ? 'Design your own maze game 🎮 — using <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>!'
+      : 'Help the robot deliver Girl Scout cookies 🍪 — using <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>!';
   }
   showPanel(n === 2 ? "b2-welcome" : "welcome");
 }

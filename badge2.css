@@ -330,9 +330,11 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 .b2-game-box    { order: 2; flex: 2 1 280px; min-width: 0; } /* the "stage" */
 /* Large screens: let the build workspace break out past the 1080px page cap so
    the maze "stage" can grow. Centered via negative inline margins relative to
-   <main>. The header/settings above stay at the normal page width. */
+   <main>. The "How it all works" guide matches that width; the header/quickstart
+   above stay at the normal page width. */
 @media (min-width: 1200px) {
-  .b2-build-workspace {
+  .b2-build-workspace,
+  #b2-build .b2-build-body > .b2-guide {
     width: min(96vw, 1440px);
     margin-inline: calc(50% - min(96vw, 1440px) / 2);
   }
@@ -370,7 +372,32 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 }
 
 /* full-width game stage — keep the maze centered */
-.b2-game-box .stage-wrap { display: flex; justify-content: center; }
+.b2-game-box .stage-wrap { display: flex; justify-content: center; position: relative; }
+
+/* "show message" toast — floats briefly on top of the maze, then fades */
+.b2-say-toast {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  max-width: 88%;
+  background: rgba(58, 44, 74, 0.94);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 9px 15px;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 6;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.b2-say-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .b2-say-toast { transition: opacity 0.25s ease; }
+}
 
 /* themed-icon pickers (player / item / goal) under the maze tools */
 .b2-skins {
@@ -397,10 +424,12 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   padding: 4px 8px;
   border-radius: 8px;
 }
-#b2-build .maze-size { gap: 8px; margin-bottom: 12px; }
+#b2-build .maze-size { gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
 #b2-build .size-label,
 #b2-build .b2-skins label { font-size: 0.9rem; }
 #b2-build .maze-size .cond-select { font-size: 0.9rem; padding: 6px 9px; }
+/* match the Size dropdown to the Random / Clear / Erase buttons beside it */
+#b2-build .b2-game-box .maze-size .cond-select { font-size: 0.78rem; padding: 4px 8px; border-radius: 8px; }
 #b2-build .b2-skins { gap: 8px 16px; margin-bottom: 10px; }
 #b2-build .b2-skins .cond-select { font-size: 1.2rem; padding: 4px 7px; }
 
@@ -902,10 +931,22 @@ body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
 }
 .b2-tester-panel .b2-reflect label { color: #1f6bb0; }
 
-/* Share stage navigation: back to Build vs on to Finish */
+/* Share stage navigation: back to Build vs on to Finish (centered) */
 .b2-share-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   margin: 18px 0 6px;
+  justify-content: center;
+}
+.b2-clear-feedback { margin-top: 14px; }
+
+/* Center the "Next" navigation buttons at the bottom of every Badge-2 stage
+   (shrink-to-fit + auto side margins). Badge 1 uses data-goto, so untouched. */
+.welcome-card > [data-b2goto],
+.b2-intro-card > [data-b2goto],
+.b2-build-body > [data-b2goto] {
+  display: block;
+  width: fit-content;
+  margin: 20px auto 0;
 }
