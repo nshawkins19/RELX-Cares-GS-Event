@@ -374,12 +374,12 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 /* full-width game stage — keep the maze centered */
 .b2-game-box .stage-wrap { display: flex; justify-content: center; position: relative; }
 
-/* "show message" toast — floats briefly on top of the maze, then fades */
+/* "show message" toast — pops briefly in the CENTER of the maze, then fades */
 .b2-say-toast {
   position: absolute;
-  top: 12px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%) translateY(-8px);
+  transform: translate(-50%, -50%) scale(0.9);
   max-width: 88%;
   background: rgba(58, 44, 74, 0.94);
   color: #fff;
@@ -394,7 +394,7 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   z-index: 6;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
-.b2-say-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.b2-say-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 @media (prefers-reduced-motion: reduce) {
   .b2-say-toast { transition: opacity 0.25s ease; }
 }
