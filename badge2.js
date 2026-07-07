@@ -36,7 +36,7 @@ const GAMES_FOR_GOOD = [
     emoji: "🧬",
     title: "Foldit",
     tag: "Science puzzle",
-    text: "Players folding proteins in this puzzle game figured out the shape of an AIDS-related virus enzyme in just three weeks — a problem scientists had been stuck on for 15 years. The gamers became co-authors of a real science paper!",
+    text: "Players folding proteins in this puzzle game cracked the shape of an AIDS-virus enzyme in just 3 weeks — a puzzle that stumped scientists for 15 years. The gamers even became co-authors of a real science paper!",
     source: "Scientific American",
     link: "https://www.scientificamerican.com/article/foldit-gamers-solve-riddle/",
   },
@@ -44,7 +44,7 @@ const GAMES_FOR_GOOD = [
     emoji: "🧠",
     title: "Sea Hero Quest",
     tag: "Brain research",
-    text: "More than 4 million people played this boat-sailing adventure, and the way they found their way around gave scientists a huge set of data to help spot Alzheimer's disease earlier. Playing for fun became real brain research.",
+    text: "Over 4 million people played this boat-sailing adventure, and the way they found their way around gave scientists a huge set of data to help spot Alzheimer's disease earlier. Playing for fun became real brain research!",
     source: "Alzheimer's Research UK",
     link: "https://www.alzheimersresearchuk.org/research/for-researchers/resources-and-information/sea-hero-quest/",
   },
@@ -52,7 +52,7 @@ const GAMES_FOR_GOOD = [
     emoji: "💊",
     title: "Re-Mission",
     tag: "Health game",
-    text: "In this game, young people with cancer pilot a tiny nanobot that blasts cancer cells. A study found that kids who played stuck to their treatment better and felt more confident about beating their illness.",
+    text: "In this game, young people with cancer pilot a tiny nanobot that blasts cancer cells. A study found kids who played stuck to their treatment better and felt more confident about beating their illness.",
     source: "Wikipedia",
     link: "https://en.wikipedia.org/wiki/Re-Mission",
   },
@@ -68,7 +68,7 @@ const GAMES_FOR_GOOD = [
     emoji: "👁️",
     title: "EyeWire",
     tag: "Citizen science",
-    text: "EyeWire is a puzzle game where players trace and color in 3-D pictures of real brain cells. Working together, these 'citizen scientists' helped map the brain — and even discovered six brand-new kinds of brain cells in the eye!",
+    text: "Players trace and color in 3-D pictures of real brain cells. Working together, these 'citizen scientists' helped map the brain — and even discovered six brand-new kinds of brain cells in the eye!",
     source: "Princeton University",
     link: "https://www.princeton.edu/news/2018/05/17/princeton-researchers-crowdsource-brain-mapping-gamers-discover-six-new-neuron",
   },
@@ -1142,24 +1142,31 @@ function b2BuildWelcome() {
 
 function b2BuildDiscover() {
   const cards = GAMES_FOR_GOOD.map((c) => `
-    <div class="pioneer">
-      <a class="pioneer-photo" href="${c.link}" target="_blank" rel="noopener"><div class="face">${c.emoji}</div></a>
-      <h3><a href="${c.link}" target="_blank" rel="noopener">${c.title}</a></h3>
-      <div class="years">${c.tag}</div>
-      <p>${c.text}</p>
-      <a class="b2-source" href="${c.link}" target="_blank" rel="noopener">Source: ${c.source} →</a>
+    <div class="pioneer flip-card" tabindex="0" role="button" aria-label="Flip the ${c.title} card to read more">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="face">${c.emoji}</div>
+          <h3>${c.title}</h3>
+          <span class="flip-hint">Tap to flip →</span>
+        </div>
+        <div class="flip-back">
+          <h3><a href="${c.link}" target="_blank" rel="noopener">${c.title}</a></h3>
+          <p>${c.text}</p>
+          <a class="b2-source" href="${c.link}" target="_blank" rel="noopener">Source: ${c.source} →</a>
+          <span class="flip-hint">↩ Tap to flip back</span>
+        </div>
+      </div>
     </div>`).join("");
   return `
     <div class="level-head"><h2>Step 1 — Discover</h2><span class="difficulty easy">Game design for good</span></div>
     <div class="b2-intro-card b2-prose">
       <p>You've learned how computers helped astronauts land on the Moon 🚀. Did you know <strong>real video games</strong> have helped people too — solving science mysteries, fighting disease, and even designing neighborhoods?</p>
-      <p>Here are real games and projects that did good in the world. <strong>Tap any game's name or picture</strong> to read more about it!</p>
+      <p>Here are real games and projects that did good in the world. <strong>Tap any card</strong> to flip it over and read more about it!</p>
       <div class="card-grid">${cards}</div>
-      <p class="credit">Real-world examples and facts come from the sources linked on each card — including <a href="https://www.scientificamerican.com/article/foldit-gamers-solve-riddle/" target="_blank" rel="noopener">Scientific American</a>, <a href="https://www.alzheimersresearchuk.org/research/for-researchers/resources-and-information/sea-hero-quest/" target="_blank" rel="noopener">Alzheimer's Research UK</a>, <a href="https://en.wikipedia.org/wiki/Re-Mission" target="_blank" rel="noopener">Wikipedia</a>, <a href="https://www.blockbyblock.org/" target="_blank" rel="noopener">UN-Habitat's Block by Block</a>, <a href="https://www.princeton.edu/news/2018/05/17/princeton-researchers-crowdsource-brain-mapping-gamers-discover-six-new-neuron" target="_blank" rel="noopener">Princeton University</a>, and <a href="https://scistarter.org/eve-online-project-discovery" target="_blank" rel="noopener">SciStarter</a>. Tap a game to learn more.</p>
+      <p class="credit">Real-world examples and facts come from the sources linked on each card — including <a href="https://www.scientificamerican.com/article/foldit-gamers-solve-riddle/" target="_blank" rel="noopener">Scientific American</a>, <a href="https://www.alzheimersresearchuk.org/research/for-researchers/resources-and-information/sea-hero-quest/" target="_blank" rel="noopener">Alzheimer's Research UK</a>, <a href="https://en.wikipedia.org/wiki/Re-Mission" target="_blank" rel="noopener">Wikipedia</a>, <a href="https://www.blockbyblock.org/" target="_blank" rel="noopener">UN-Habitat's Block by Block</a>, <a href="https://www.princeton.edu/news/2018/05/17/princeton-researchers-crowdsource-brain-mapping-gamers-discover-six-new-neuron" target="_blank" rel="noopener">Princeton University</a>, and <a href="https://scistarter.org/eve-online-project-discovery" target="_blank" rel="noopener">SciStarter</a>. Tap a card to learn more.</p>
       <div class="b2-reflect">
         <label for="b2-r-discover">✏️ What kind of game could <strong>you</strong> create to teach someone a new skill, or to help solve a problem?</label>
         <textarea id="b2-r-discover" rows="3" placeholder="My game could help people…"></textarea>
-        <p class="b2-saved-note">Your answer is saved on this device automatically. 💾</p>
       </div>
       <button class="btn btn-primary" data-b2goto="b2-explore">Next: Explore the ideas →</button>
     </div>`;
@@ -1267,7 +1274,6 @@ function b2BuildPlan() {
 
       <form class="b2-form" onsubmit="return false">
         <div class="field"><label for="b2-p-title">🎮 What's your game called?</label><input type="text" id="b2-p-title" placeholder="The Cookie Quest" /></div>
-        <div class="field"><label for="b2-p-problem">💡 How does your game help, teach, or solve a problem ("for good")?</label><textarea id="b2-p-problem" rows="2" placeholder="My game teaches…"></textarea></div>
         <div class="field"><label for="b2-p-goal">🏁 What is the player trying to do to win?</label><textarea id="b2-p-goal" rows="2" placeholder="The player has to reach the goal after collecting all the items…"></textarea></div>
         <div class="field">
           <label>🧩 What will make your maze interesting or tricky? (pick any that fit your idea)</label>
@@ -1392,7 +1398,7 @@ function b2BuildBuild() {
         <div class="b2-code-cols">
           <div class="b2-code-palette">
             <h3>🧩 Code Blocks</h3>
-            <p class="palette-hint">Snap blocks under an <b>event</b> to say what happens — just like Scratch! Drag a block from the palette into <b>Your Scripts</b>.</p>
+            <p class="palette-hint">Snap blocks under an <b>event</b> to say what happens! Drag a block from the palette into <b>Your Scripts</b>.</p>
             <div class="b2-scripts-palette" id="b2-scripts-palette"></div>
           </div>
           <div class="b2-code-scripts">
@@ -1569,10 +1575,31 @@ function b2WireShare() {
   b2Autosave(document.getElementById("b2-improve"), "share.improve");
 }
 
+/* Discover step: flip the "games for good" cards on click / Enter / Space.
+   Clicks on a link inside a card fall through so the source opens normally. */
+function b2WireDiscover() {
+  const grid = document.querySelector("#b2-discover .card-grid");
+  if (!grid) return;
+  const toggle = (target) => {
+    const card = target.closest(".flip-card");
+    if (card) card.classList.toggle("is-flipped");
+  };
+  grid.addEventListener("click", (e) => {
+    if (e.target.closest("a")) return; // let source / title links work
+    toggle(e.target);
+  });
+  grid.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if (e.target.closest("a")) return;
+    e.preventDefault();
+    toggle(e.target);
+  });
+}
+
 function b2WireReflections() {
   ["b2-r-discover", "b2-r-game", "b2-r-seq", "b2-r-loop", "b2-r-cond"].forEach((id) =>
     b2Autosave(document.getElementById(id), `reflect.${id}`));
-  ["b2-p-title", "b2-p-problem", "b2-p-goal", "b2-p-rule"].forEach((id) =>
+  ["b2-p-title", "b2-p-goal", "b2-p-rule"].forEach((id) =>
     b2Autosave(document.getElementById(id), `plan.${id}`));
   ["b2-p-c1", "b2-p-c2", "b2-p-c3", "b2-p-c6"].forEach((id) =>
     b2AutosaveCheck(document.getElementById(id), `plan.${id}`));
@@ -1671,6 +1698,7 @@ function b2Init() {
   b2WireBuild();
   b2WireShare();
   b2WireReflections();
+  b2WireDiscover();
   b2RenderEditor();
   const sizeSel = document.getElementById("b2-size");
   if (sizeSel) sizeSel.value = String(B2.model.cols);

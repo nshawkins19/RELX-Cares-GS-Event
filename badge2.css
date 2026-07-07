@@ -102,10 +102,78 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 
 /* "games for good" example cards — reuse Badge 1's .pioneer card look,
    with a green "for good" accent and a clickable source link */
-#b2-discover .card-grid { margin: 20px 0; }
+#b2-discover .card-grid { margin: 20px 0; grid-auto-rows: 1fr; } /* 1fr rows → every card the same height */
 #b2-discover .pioneer { border-top-color: var(--green); }
 /* center the source/credit line (the wider .b2-prose p rule was overriding its auto margins) */
 #b2-discover .credit { text-align: center; margin-left: auto; margin-right: auto; }
+
+/* ---- Flip cards (Discover): front shows the icon + name; click/tap flips
+   to the detailed view. Both faces are stacked in one grid cell so the card
+   auto-sizes to the taller (back) face — no fixed height needed. Scoped to
+   #b2-discover so Badge 1's Coding Pioneers cards are untouched. ---- */
+#b2-discover .flip-card {
+  background: transparent;
+  box-shadow: none;
+  border-top: none;
+  padding: 0;
+  perspective: 1200px;
+  cursor: pointer;
+}
+#b2-discover .flip-inner {
+  display: grid;
+  height: 100%;                     /* fill the equal-height card cell */
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+}
+#b2-discover .flip-card.is-flipped .flip-inner { transform: rotateY(180deg); }
+#b2-discover .flip-front,
+#b2-discover .flip-back {
+  grid-area: 1 / 1;                 /* stack both faces in the same cell */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  border-top: 6px solid var(--green);
+}
+#b2-discover .flip-front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+}
+#b2-discover .flip-front .face {
+  height: auto;
+  width: 100%;
+  padding: 18px 0;
+  margin-bottom: 6px;
+}
+#b2-discover .flip-back {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+}
+#b2-discover .flip-back h3 { margin-top: 0; }
+/* pin the source + flip-back hint to the bottom; extra space lands between the
+   summary and the source */
+#b2-discover .flip-back .b2-source { margin-top: auto; }
+/* subtle "flip me" hint at the bottom of each face */
+#b2-discover .flip-hint {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8a7ba0;
+}
+#b2-discover .flip-card:hover .flip-front,
+#b2-discover .flip-card:hover .flip-back { box-shadow: 0 8px 22px rgba(90, 61, 114, 0.18); }
+#b2-discover .flip-card:focus-visible { outline: 3px solid var(--purple-light); outline-offset: 3px; border-radius: 18px; }
+@media (prefers-reduced-motion: reduce) {
+  #b2-discover .flip-inner { transition: none; }
+}
 .b2-source {
   display: inline-block;
   margin-top: 10px;
@@ -258,7 +326,7 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   margin-top: 18px;
 }
 #b2-settings    { flex: 1 1 100%; order: 0; }
-.b2-scripts-box { order: 1; flex: 3 1 320px; min-width: 0; } /* palette + scripts */
+.b2-scripts-box { order: 1; flex: 3 1 320px; min-width: 0; container-type: inline-size; } /* palette + scripts; query container so the palette can stack based on the pod's real width */
 .b2-game-box    { order: 2; flex: 2 1 280px; min-width: 0; } /* the "stage" */
 /* Large screens: let the build workspace break out past the 1080px page cap so
    the maze "stage" can grow. Centered via negative inline margins relative to
@@ -269,17 +337,6 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
     margin-inline: calc(50% - min(96vw, 1440px) / 2);
   }
 }
-/* Like Scratch's stage/canvas panels: cap the game and code pods to
-   whatever viewport height is left once they're scrolled into view, and
-   let each pod scroll INTERNALLY instead of the page. That's what keeps
-   the maze and the code blocks visible together — no scrolling back and
-   forth between them once you reach the workspace. */
-.b2-game-box,
-.b2-scripts-box {
-  max-height: calc(100vh - 90px);
-  overflow-y: auto;
-}
-.b2-code-scripts { min-height: 0; }
 /* roomier padding on the Build-stage pods (16px → 26px) */
 #b2-build .box { padding: 26px; }
 /* keep the game pod clear of the sticky tab bar when scrolled to */
@@ -335,10 +392,10 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 }
 /* compact paint/size buttons inside the "Your game" stage pod so they don't
    crowd the maze — leaves more room for a bigger board */
-.b2-game-box .maze-tool {
-  font-size: 0.88rem;
-  padding: 6px 11px;
-  border-radius: 9px;
+#b2-build .b2-game-box .maze-tool {
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  border-radius: 8px;
 }
 #b2-build .maze-size { gap: 8px; margin-bottom: 12px; }
 #b2-build .size-label,
@@ -389,7 +446,23 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 }
 /* hide the run message bar when it's empty (no instruction shown during play) */
 #msg-b2:empty { display: none; }
-@media (max-width: 820px) { .b2-code-cols { grid-template-columns: 1fr; } }
+/* When the code pod itself (not the window) gets too narrow to hold the
+   palette AND a usable scripts canvas side by side, stack them: the palette
+   becomes a compact band across the top and the scripts canvas takes the pod's
+   full width, so placed blocks stop wrapping into an unreadable stack.
+   Container query on .b2-scripts-box so this is driven by the pod's real width
+   at any window size / layout. */
+@container (max-width: 560px) {
+  .b2-code-cols { grid-template-columns: 1fr; }
+  /* lay the category cards out as a compact wrapping band (2+ columns) instead
+     of one tall column, so the scripts canvas stays near the top of the pod.
+     Extra specificity beats the base .b2-scripts-palette flex-column rule. */
+  .b2-code-palette .b2-scripts-palette {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
 
 /* ---------- Scratch-style code blocks (Step 4) ---------- */
 /* category color tokens — palette swatch + placed blocks share the hue */
@@ -399,6 +472,7 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 .cat-control { --cat: #e08a3c; --cat-soft: #fdeede; }
 
 /* palette grouped into color-coded categories */
+.b2-code-palette .palette-hint { margin-bottom: 14px; }
 .b2-scripts-palette { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
 .b2-cat {
   border: 1px solid #ece3f7;
