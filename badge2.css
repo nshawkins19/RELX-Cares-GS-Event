@@ -39,6 +39,26 @@ body.view-badge-2 .tab[data-badge="1"] { display: none; }
 }
 .tab[data-badge="2"].is-visited.is-active::after { color: #b6f5c2; }
 
+/* per-step time estimates ("time box" for Badge 2) */
+.tab[data-badge="2"] .tab-time {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #8a7ba0;
+  margin-left: 3px;
+}
+.tab[data-badge="2"].is-active .tab-time { color: #e6d3fb; }
+.b2-time-box {
+  display: inline-block;
+  margin-top: 10px;
+  background: #f3e9fc;
+  border: 1.5px solid var(--purple-light);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--purple);
+}
+
 /* ---------- Step prose & reflection ---------- */
 .b2-intro-card {
   background: #fff;
@@ -159,7 +179,7 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 #b2-discover .flip-back h3 { margin-top: 0; }
 /* pin the source + flip-back hint to the bottom; extra space lands between the
    summary and the source */
-#b2-discover .flip-back .b2-source { margin-top: auto; }
+#b2-discover .flip-back .b2-source { margin-top: auto; align-self: flex-start; }
 /* subtle "flip me" hint at the bottom of each face */
 #b2-discover .flip-hint {
   display: block;
@@ -432,6 +452,16 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 #b2-build .b2-game-box .maze-size .cond-select { font-size: 0.78rem; padding: 4px 8px; border-radius: 8px; }
 #b2-build .b2-skins { gap: 8px 16px; margin-bottom: 10px; }
 #b2-build .b2-skins .cond-select { font-size: 1.2rem; padding: 4px 7px; }
+/* on large screens there's room, so grow the game-pod buttons and the Size
+   dropdown to match the icon dropdowns (.b2-skins .cond-select) above.
+   Placed after the compact base rules so it wins at equal specificity. */
+@media (min-width: 1200px) {
+  #b2-build .b2-game-box .maze-tool,
+  #b2-build .b2-game-box .maze-size .cond-select {
+    font-size: 1.2rem;
+    padding: 4px 7px;
+  }
+}
 
 /* Badge 2: the player stays a 🤖 while the game runs (Badge 1 keeps its arrow).
    Replace the rotating blue arrow with the robot emoji and don't rotate it. */
@@ -473,6 +503,8 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   gap: 10px;
   flex-wrap: wrap;
 }
+/* make the "Clear blocks" button more compact than the maze tool default */
+#b2-clear-scripts { padding: 5px 10px; font-size: 0.8rem; }
 /* hide the run message bar when it's empty (no instruction shown during play) */
 #msg-b2:empty { display: none; }
 /* When the code pod itself (not the window) gets too narrow to hold the
@@ -779,16 +811,23 @@ body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
 }
 .b2-finish-hero h2 { color: var(--purple); margin: 6px 0 8px; }
 .b2-finish-emoji { font-size: 2.6rem; line-height: 1; }
-.b2-finish-name { max-width: 420px; margin: 0 auto 18px; text-align: center; }
-.b2-finish-name > label { display: block; text-align: center; }
-.b2-finish-name input { text-align: center; }
+.b2-finish-name { max-width: 360px; margin: 0 auto 18px; text-align: center; }
+.b2-finish-name > label { display: block; text-align: center; font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+.b2-finish-name input { text-align: center; font-size: 1.02rem; padding: 7px 11px; }
+
+/* clearer break between the Finish-stage sections */
+.b2-finish-divider {
+  border: none;
+  border-top: 2px solid var(--purple-light);
+  margin: 34px 0 24px;
+}
 
 /* ---- The certificate card (this is what gets rendered into the PDF) ---- */
 .b2-cert {
   background: #fffdf8;
-  border: 3px double var(--purple);
+  border: none;
   border-radius: 16px;
-  padding: 22px 24px 18px;
+  padding: 26px 28px 22px;
   margin: 12px 0 18px;
   box-shadow: var(--shadow);
   color: var(--ink);
@@ -796,30 +835,30 @@ body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
 .b2-cert-ribbon {
   text-align: center;
   font-weight: 900;
-  font-size: 1.15rem;
+  font-size: 2.1rem;
   color: var(--purple);
   letter-spacing: 0.02em;
 }
 .b2-cert-badge {
   text-align: center;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 1.05rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #8a7ba0;
   margin: 2px 0 12px;
 }
-.b2-cert-who { text-align: center; line-height: 1.5; margin: 0 0 16px; }
-.b2-cert-who b { font-size: 1.35rem; color: var(--purple); }
+.b2-cert-who { text-align: center; line-height: 1.5; margin: 0 0 16px; font-size: 1.08rem; }
+.b2-cert-who b { font-size: 1.55rem; color: var(--purple); }
 .b2-cert-cols {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 22px 40px;
   align-items: start;
   border-top: 2px dashed #e7d9f4;
   padding: 14px 0;
 }
-.b2-cert-cols h4 { margin: 0 0 8px; color: var(--purple); font-size: 0.98rem; }
+.b2-cert-cols h4 { margin: 0 0 8px; color: var(--purple); font-size: 1.12rem; }
 .b2-cert-board-wrap { text-align: center; }
 .b2-cert-grid {
   display: grid;
@@ -839,9 +878,10 @@ body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
   justify-content: center;
   background: #f5eefc;
 }
-.b2-cert-cell.wall { background: #3a2c4a; }
+/* walls render the brick emoji (matching the maze), on the floor background */
+.b2-cert-cell.wall::before { content: "🧱"; font-size: 1.5em; line-height: 1; }
 .b2-cert-msgs {
-  font-size: 0.85rem;
+  font-size: 0.97rem;
   text-align: left;
   padding: 12px 0 14px;
   border-bottom: 2px dashed #e7d9f4;
@@ -851,33 +891,41 @@ body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
 .b2-cert-facts li {
   padding: 5px 0;
   border-bottom: 1px solid #f0e8fa;
-  font-size: 0.9rem;
+  font-size: 1.03rem;
 }
 .b2-cert-section { padding: 14px 0 4px; }
-.b2-cert-section h4 { margin: 0 0 10px; color: var(--purple); font-size: 0.98rem; }
+.b2-cert-section h4 { margin: 0 0 10px; color: var(--purple); font-size: 1.12rem; }
+/* flow the reflection answers into two columns so short ones pack together and
+   the section takes less height — freeing vertical room for a bigger maze */
+.b2-cert-answers {
+  column-count: 2;
+  column-gap: 36px;
+}
 .b2-cert-answer {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1px 0;
-  margin-bottom: 8px;
+  gap: 2px 0;
+  margin-bottom: 18px;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
 }
-.b2-cert-answer b { font-size: 0.82rem; color: #6b5d7d; }
-.b2-cert-answer span { font-size: 0.92rem; line-height: 1.4; }
+.b2-cert-answer b { font-size: 0.96rem; color: #000; }
+.b2-cert-answer span { font-size: 0.88rem; line-height: 1.4; color: #555; }
 .b2-cert-skills { border-top: 2px dashed #e7d9f4; padding-top: 12px; }
-.b2-cert-skills h4 { margin: 0 0 8px; color: var(--purple); font-size: 0.98rem; }
+.b2-cert-skills h4 { margin: 0 0 8px; color: var(--purple); font-size: 1.12rem; }
 .b2-cert-skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .b2-cert-skill-chips span {
   background: #f3e9fc;
   border: 1.5px solid var(--purple-light);
   border-radius: 999px;
-  padding: 3px 11px;
-  font-size: 0.82rem;
+  padding: 4px 13px;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--purple);
 }
 .b2-cert-foot {
   text-align: center;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   color: #8a7ba0;
   padding-top: 24px;
 }

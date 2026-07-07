@@ -403,7 +403,7 @@ function b2RenderTools() {
 function b2RenderLegend() {
   const el = document.getElementById("b2-legend");
   if (el) el.innerHTML =
-    `${B2.skin.P} player &nbsp;•&nbsp; ${B2.skin.H} goal &nbsp;•&nbsp; ${B2.skin.C} item &nbsp;•&nbsp; 🔑 key &nbsp;•&nbsp; 🚪 door &nbsp;•&nbsp; dark = wall`;
+    `${B2.skin.P} player &nbsp;•&nbsp; ${B2.skin.H} goal &nbsp;•&nbsp; ${B2.skin.C} item &nbsp;•&nbsp; 🔑 key &nbsp;•&nbsp; 🚪 door &nbsp;•&nbsp; 🧱 = wall`;
 }
 /* "when robot touches …" options, with the themed icons */
 function b2TouchTileOpts() {
@@ -784,8 +784,7 @@ function b2WinGame() {
           ? [{ label: "↻ Play again", primary: true, onClick: () => { b2HideModal(); b2PlayerStart(); } }]
           : [{ label: "↻ Play again", onClick: () => { b2HideModal(); b2PlayerStart(); } },
              { label: "Make your own →", primary: true, onClick: () => { b2HideModal(); b2ExitShared(); } }])
-      : [{ label: "Keep building", onClick: () => { b2HideModal(); b2PlayerStop(); } },
-         { label: "🔗 Share it", primary: true, onClick: () => { b2HideModal(); b2PlayerStop(); showPanel("b2-share"); } }],
+      : [{ label: "Got it! 🎉", primary: true, onClick: () => { b2HideModal(); b2PlayerStop(); } }],
   });
 }
 
@@ -851,6 +850,7 @@ function b2RenderScripts() {
     empty.className = "program-empty";
     empty.textContent = "No blocks yet — drag an Event block here to start. (With no blocks, the arrow keys and arrow pad do nothing.)";
     list.appendChild(empty);
+    B2_SESSION.saveScripts(); // persist the empty state too, so a clear survives a refresh
     return;
   }
   B2.scripts.forEach((block, i) => list.appendChild(b2RenderBlock(block, B2.scripts, i)));
@@ -1200,7 +1200,7 @@ function b2BuildExplore() {
     <div class="level-head"><h2>Step 2 — Explore</h2></div>
     <div class="b2-intro-card b2-prose">
       <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>. Here's how each one shows up in a game:</p>
-      <p>📋 <strong>Sequence</strong> means doing things in the right order. A game runs your steps one after another, exactly as you set them up — just like putting the robot's commands in order in Badge 1.</p>
+      <p style="margin-top:16px;">📋 <strong>Sequence</strong> means doing things in the right order. A game runs your steps one after another, exactly as you set them up — just like putting the robot's commands in order in Badge 1.</p>
       <p>🔁 <strong>Loops</strong> repeat things again and again. Games are full of loops: an enemy patrols back and forth, a timer counts down, and the player keeps trying until they win — just like the <em>Repeat</em> block in Badge 1.</p>
       <p>❓ <strong>Conditionals</strong> let the game make choices with <em>IF</em>. <em>IF the robot has a key, THEN the door opens. IF every cookie is collected, THEN the player wins.</em> Without conditionals, every situation would be the same — pretty boring!</p>
       <div class="b2-callout">You'll build your game with these same three ideas from Badge 1 — <strong>sequence, loops, and conditionals</strong> — by snapping blocks together. Then a friend uses the <strong>arrow keys</strong> to play. That's exactly how real game design works!</div>
@@ -1273,7 +1273,7 @@ function b2BuildPlan() {
 
       <p>Here's what you're making: a maze that a robot (or whatever character you pick) explores one step at a time.</p>
       <ul class="b2-plan-summary">
-        <li>You draw the maze and decide what's in it — cookies to grab, plus keys and locked doors.</li>
+        <li>You draw the maze and decide what's in it — items to grab, keys, and locked doors.</li>
         <li>You write simple snap-together rules, like <em>WHEN the robot touches the cookie → pick it up</em>, that decide what each piece does.</li>
         <li>Then you hand your device to another Girl Scout, who <strong>playtests</strong> your game with just the arrow keys — no coding needed to play.</li>
         <li>You use her feedback to <strong>improve</strong> your maze, and test again — that's <em>iteration</em>! Keep going until it's just right.</li>
@@ -1358,7 +1358,7 @@ function b2BuildBuild() {
             <li><span class="b2-guide-ico">🟣</span><div><b>Actions</b> — <i>pick it up</i>, <i>open the door</i>, <i>win the game</i>, <i>show message</i>.</div></li>
             <li><span class="b2-guide-ico">🟠</span><div><b>Control</b> — <i>if carrying a key</i>, <i>if all cookies collected</i> — put blocks inside to run them only when it's true.</div></li>
           </ul>
-          <p style="font-size:0.85rem; color:#6b5d7d; margin-top:6px;">Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door stays solid like a wall. Remove a block with ✕.</p>
+          <p style="font-size:0.85rem; color:#6b5d7d; margin-top:6px;">Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door stays solid like a wall. Remove a block with the eraser.</p>
         </div>
       </div>
     </details>
@@ -1515,14 +1515,16 @@ function b2BuildFinish() {
         <input type="text" id="b2-cert-name-input" placeholder="Type your name here" />
       </div>
 
+      <hr class="b2-finish-divider" />
       <h3 style="color:var(--purple);">🎮 Play your finished game</h3>
       <p>Take a victory lap — play the game you made! (It updates from your latest work in the Build step.)</p>
       <div class="b2-embed-wrap">
-        <iframe id="b2-finish-frame" class="b2-embed-frame" title="Your finished game — play it here"></iframe>
+        <iframe id="b2-finish-frame" class="b2-embed-frame" scrolling="no" title="Your finished game — play it here"></iframe>
       </div>
       <p class="b2-embed-empty" id="b2-finish-empty" hidden>Add a 🤖 player start and a 🏠 goal in the <strong>Build</strong> step, then come back to play your game here.</p>
 
-      <h3 style="color:var(--purple); margin-top:22px;">📜 Your certificate</h3>
+      <hr class="b2-finish-divider" />
+      <h3 style="color:var(--purple);">📜 Your certificate</h3>
       <p>Here's a summary of everything you learned and made. Save it as a PDF or send it to a grown-up's email!</p>
 
       <div class="b2-cert" id="b2-cert"><!-- filled by b2RenderCertificate() --></div>
@@ -1543,11 +1545,11 @@ function b2BuildFinish() {
    ============================================================ */
 const B2_TABS = [
   { target: "b2-welcome",  num: "▶", label: "Start",   build: b2BuildWelcome  },
-  { target: "b2-discover", num: "1",  label: "Discover", build: b2BuildDiscover },
-  { target: "b2-explore",  num: "2",  label: "Explore",  build: b2BuildExplore  },
-  { target: "b2-plan",     num: "3",  label: "Plan",     build: b2BuildPlan     },
-  { target: "b2-build",    num: "4",  label: "Build",    build: b2BuildBuild    },
-  { target: "b2-share",    num: "5",  label: "Share",    build: b2BuildShare    },
+  { target: "b2-discover", num: "1",  label: "Discover", build: b2BuildDiscover, mins: 8  },
+  { target: "b2-explore",  num: "2",  label: "Explore",  build: b2BuildExplore,  mins: 8  },
+  { target: "b2-plan",     num: "3",  label: "Plan",     build: b2BuildPlan,     mins: 10 },
+  { target: "b2-build",    num: "4",  label: "Build",    build: b2BuildBuild,    mins: 15 },
+  { target: "b2-share",    num: "5",  label: "Share",    build: b2BuildShare,    mins: 8  },
   { target: "b2-finish",   num: "🏆", label: "Finish",   build: b2BuildFinish   },
 ];
 
@@ -1695,15 +1697,56 @@ function b2CountBlocks(list) {
   return (list || []).reduce((n, b) => n + 1 + b2CountBlocks(b.body), 0);
 }
 /* gather everything the certificate shows from live state + saved answers */
+/* describe one code block as a short phrase for the certificate */
+function b2BlockPhrase(b) {
+  switch (b.type) {
+    case "whenPlay":  return "when ▶ Play is pressed";
+    case "whenKey":   return "when an arrow key is pressed";
+    case "whenTouch": {
+      const t = { C: `${B2.skin.C} item`, K: "🔑 key", D: "🚪 door", H: `${B2.skin.H} goal`, P: "start" }[b.tile] || "something";
+      return `when the robot touches the ${t}`;
+    }
+    case "move":      return "move";
+    case "collect":   return "pick it up 🎒";
+    case "openDoor":  return "open the door 🔓";
+    case "win":       return "win the game 🏆";
+    case "say":       return "show a message 💬";
+    case "ifKey":     return "if carrying a 🔑 key";
+    case "ifCookies": return `if all ${B2.skin.C} collected`;
+    default:          return "";
+  }
+}
+/* a short sentence for one top-level rule (its event + what it does) */
+function b2RuleText(hat) {
+  const acts = [];
+  (hat.body || []).forEach((b) => {
+    if (b.type === "ifKey" || b.type === "ifCookies") {
+      const inner = (b.body || []).map(b2BlockPhrase).filter(Boolean);
+      acts.push(b2BlockPhrase(b) + (inner.length ? " " + inner.join(", ") : ""));
+    } else {
+      const p = b2BlockPhrase(b);
+      if (p) acts.push(p);
+    }
+  });
+  return b2BlockPhrase(hat) + (acts.length ? " → " + acts.join(", ") : "");
+}
+/* does the script tree contain a block of this type anywhere? */
+function b2HasScriptType(list, type) {
+  return (list || []).some((b) => b.type === type || b2HasScriptType(b.body, type));
+}
 function b2CertData() {
   const s = b2ReadSettings();
   const g = B2.model.grid;
   const tally = (ch) => g.reduce((n, row) => n + row.filter((c) => c === ch).length, 0);
+  // challenges reflect what's actually in the built maze (not the plan checkboxes)
   const challenges = [];
-  if (b2Load("plan.b2-p-c1", "0") === "1") challenges.push("🧱 A winding path");
-  if (b2Load("plan.b2-p-c3", "0") === "1") challenges.push("🍪 Things to collect");
-  if (b2Load("plan.b2-p-c2", "0") === "1") challenges.push("🔑 Key & 🚪 locked door");
-  if (b2Load("plan.b2-p-c6", "0") === "1") challenges.push("💬 A pop-up message");
+  if (tally("C") > 0) challenges.push("🍪 Things to collect");
+  if (tally("K") > 0 || tally("D") > 0) challenges.push("🔑 Key & 🚪 locked door");
+  if (tally("B") > 0) challenges.push("📦 Blocks to push");
+  if (b2HasScriptType(B2.scripts, "say")) challenges.push("💬 A pop-up message");
+  // "a rule I coded" comes from the first real rule in the script canvas
+  const ruleHat = (B2.scripts || []).find((b) => Array.isArray(b.body) && b.body.length);
+  const codedRule = ruleHat ? b2RuleText(ruleHat) : "";
   let checks = 0;
   for (let i = 1; i <= 5; i++) if (b2Load(`share.b2-t${i}`, "0") === "1") checks++;
   return {
@@ -1713,7 +1756,7 @@ function b2CertData() {
     cookies: tally("C"), keys: tally("K"), doors: tally("D"),
     blocks: b2CountBlocks(B2.scripts),
     goal: b2Load("plan.b2-p-goal", ""),
-    rule: b2Load("plan.b2-p-rule", ""),
+    rule: codedRule,
     challenges,
     fav: b2Load("reflect.b2-r-game", ""),
     discover: b2Load("reflect.b2-r-discover", ""),
@@ -1723,16 +1766,63 @@ function b2CertData() {
   };
 }
 /* a static snapshot of the current maze (emoji cells) for the certificate */
+const B2_CERT_CELL_MIN = 16, B2_CERT_CELL_MAX = 58;
+function b2CertCellSize(cols) {
+  return Math.max(B2_CERT_CELL_MIN, Math.min(B2_CERT_CELL_MAX, Math.floor(560 / cols)));
+}
 function b2CertBoardHTML() {
   const { grid, cols, rows } = B2.model;
-  const cell = Math.max(13, Math.min(30, Math.floor(280 / cols)));
+  const cell = b2CertCellSize(cols); // fallback; refined by b2FitCertBoard() once laid out
   let cells = "";
   for (let y = 0; y < rows; y++)
     for (let x = 0; x < cols; x++) {
       const v = b2CellVisual(grid[y][x]);
       cells += `<div class="b2-cert-cell ${v.cls}">${v.txt}</div>`;
     }
-  return `<div class="b2-cert-grid" style="grid-template-columns:repeat(${cols},${cell}px);font-size:${Math.round(cell * 0.62)}px">${cells}</div>`;
+  return `<div class="b2-cert-grid" id="b2-cert-grid" data-cols="${cols}" data-rows="${rows}" style="grid-template-columns:repeat(${cols},${cell}px);font-size:${Math.round(cell * 0.62)}px">${cells}</div>`;
+}
+/* grow the certificate maze to fill the width left over beside the facts column
+   (measured once the board's column is laid out; keeps square px cells so the
+   PDF rasterizer renders it crisply). Falls back to b2CertCellSize when hidden. */
+function b2FitCertBoard() {
+  const grid = document.getElementById("b2-cert-grid");
+  if (!grid) return;
+  const wrap = grid.parentElement; // .b2-cert-board-wrap — the flexible column
+  const avail = wrap ? wrap.clientWidth : 0;
+  const cols = +grid.dataset.cols;
+  if (!avail || !cols) return; // panel hidden / not laid out yet → keep fallback
+  const cell = Math.max(B2_CERT_CELL_MIN, Math.min(B2_CERT_CELL_MAX, Math.floor((avail - (cols - 1) - 4) / cols)));
+  grid.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
+  grid.style.fontSize = Math.round(cell * 0.62) + "px";
+}
+/* Size the maze so the whole certificate is as tall as `targetPx` (the page's
+   printable height), filling the space left over by the text — bounded by the
+   width beside the facts column. Longer, multi-line answers leave less room, so
+   the maze shrinks to keep everything on one page. Used only for the PDF. */
+function b2FitCertBoardToHeight(targetPx) {
+  const cert = document.getElementById("b2-cert");
+  const grid = document.getElementById("b2-cert-grid");
+  if (!cert || !grid) return;
+  const cols = +grid.dataset.cols, rows = +grid.dataset.rows || cols;
+  const wrap = grid.parentElement; // .b2-cert-board-wrap column
+  const setCell = (cell) => {
+    grid.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
+    grid.style.fontSize = Math.round(cell * 0.62) + "px";
+  };
+  setCell(B2_CERT_CELL_MIN); // measure the board column width with a small board
+  const availW = wrap ? wrap.clientWidth : 0;
+  const capW = availW ? Math.floor((availW - (cols - 1) - 4) / cols) : 200;
+  let lo = B2_CERT_CELL_MIN, hi = Math.max(B2_CERT_CELL_MIN, Math.min(200, capW));
+  const rowsCap = Math.floor((targetPx) / rows); // never taller than the target on its own
+  hi = Math.max(B2_CERT_CELL_MIN, Math.min(hi, rowsCap));
+  setCell(hi);
+  if (cert.getBoundingClientRect().height <= targetPx) return; // fits at the widest allowed
+  for (let i = 0; i < 16; i++) {
+    const mid = Math.round((lo + hi) / 2);
+    setCell(mid);
+    if (cert.getBoundingClientRect().height <= targetPx) lo = mid; else hi = mid;
+  }
+  setCell(Math.max(B2_CERT_CELL_MIN, lo));
 }
 function b2RenderCertificate() {
   const host = document.getElementById("b2-cert");
@@ -1744,7 +1834,7 @@ function b2RenderCertificate() {
     `<div class="b2-cert-answer"><b>${label}</b><span>${val ? b2Esc(val) : "—"}</span></div>`;
   host.innerHTML = `
     <div class="b2-cert-ribbon">🏆 Certificate of Achievement 🏆</div>
-    <p class="b2-cert-badge">Girl Scouts Junior · Digital Game Design</p>
+    <p class="b2-cert-badge">Girl Scouts · Junior Coding For Good · Digital Game Design</p>
     <p class="b2-cert-who">This certifies that<br><b id="b2-cert-name">${b2Esc(who)}</b><br>
       designed and built an original maze game!</p>
 
@@ -1771,13 +1861,15 @@ function b2RenderCertificate() {
 
     <div class="b2-cert-section">
       <h4>📝 What I planned & learned</h4>
-      ${answer("🏁 Goal of my game:", d.goal)}
-      ${answer("⚙️ A rule I coded:", d.rule)}
-      ${answer("🧩 Challenges I added:", d.challenges.join(" · "))}
-      ${answer("🎮 A game I explored:", d.fav)}
-      ${answer("🌍 A game-for-good that inspired me:", d.discover)}
-      ${answer("⭐ A playtester's favorite part:", d.liked)}
-      ${answer("🔧 Feedback I used to improve:", d.improve)}
+      <div class="b2-cert-answers">
+        ${answer("🏁 Goal of my game:", d.goal)}
+        ${answer("⚙️ A rule I coded:", d.rule)}
+        ${answer("🧩 Challenges I added:", d.challenges.join(" · "))}
+        ${answer("🎮 A game I explored:", d.fav)}
+        ${answer("🌍 A game-for-good that inspired me:", d.discover)}
+        ${answer("⭐ A playtester's favorite part:", d.liked)}
+        ${answer("🔧 Feedback I used to improve:", d.improve)}
+      </div>
     </div>
 
     <div class="b2-cert-skills">
@@ -1790,6 +1882,7 @@ function b2RenderCertificate() {
     </div>
 
     <p class="b2-cert-foot">🤖 Coding for Good · ${b2Esc(date)}</p>`;
+  b2FitCertBoard();
 }
 /* ---- PDF generation (libraries loaded on demand from a CDN) ---- */
 const B2_H2C_URL   = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -1806,23 +1899,44 @@ function b2LoadScript(src) {
 }
 /* rasterize the certificate card and wrap it in a one-page PDF.
    Reads current state each call, so the maze/messages are always up to date. */
+const B2_CERT_PDF_WIDTH = 877; // fixed layout width (css px) for the PDF render — smaller = bigger content
+                               // (paired with the margin below so content size stays constant)
+const B2_CERT_H2C_SCALE = 1.6; // html2canvas rasterization scale (crisp but small file)
 async function b2BuildCertPdf() {
   b2RenderCertificate(); // ensure it reflects the latest maze + answers
   const cert = document.getElementById("b2-cert");
   await b2LoadScript(B2_H2C_URL);
   await b2LoadScript(B2_JSPDF_URL);
-  // scale ~1.6 is crisp enough for a certificate while keeping the file small
-  // (email attachments must stay well under a couple MB); JPEG + PDF stream
-  // compression shrink it much further than PNG.
-  const canvas = await window.html2canvas(cert, { scale: 1.6, backgroundColor: "#ffffff", useCORS: true });
-  const img = canvas.toDataURL("image/jpeg", 0.9);
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4", compress: true });
   const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
-  const margin = 24;
-  const ratio = Math.min((pw - margin * 2) / canvas.width, (ph - margin * 2) / canvas.height);
-  const w = canvas.width * ratio, h = canvas.height * ratio;
-  pdf.addImage(img, "JPEG", (pw - w) / 2, margin, w, h);
+  const margin = 32; // pt (~0.44 in) — slightly slimmer border
+  const availW = pw - margin * 2, availH = ph - margin * 2;
+  // Render the card at a FIXED width so text/icons come out a consistent, large
+  // size, and size the maze to fill the vertical space that's left. Longer,
+  // multi-line answers use more room, so the maze shrinks to keep it on one page.
+  const prevWidth = cert.style.width;
+  const prevBg = cert.style.background;
+  const scale = availW / B2_CERT_PDF_WIDTH; // css px -> pt when drawn at full printable width
+  const targetPx = availH / scale;          // printable page height, in css px
+  cert.style.width = B2_CERT_PDF_WIDTH + "px";
+  cert.style.background = "#ffffff"; // white background in the PDF (on-screen keeps its tint)
+  b2FitCertBoardToHeight(targetPx);
+  let canvas;
+  try {
+    canvas = await window.html2canvas(cert, { scale: B2_CERT_H2C_SCALE, backgroundColor: "#ffffff", useCORS: true });
+  } finally {
+    cert.style.width = prevWidth; // restore the responsive on-screen preview
+    cert.style.background = prevBg;
+    b2FitCertBoard();
+  }
+  const img = canvas.toDataURL("image/jpeg", 0.9);
+  const cardHpx = canvas.height / B2_CERT_H2C_SCALE; // rendered card height in css px
+  let drawW = availW, drawH = cardHpx * scale;
+  if (drawH > availH) { // extremely long content: scale the whole card down to fit one page
+    const r = availH / drawH; drawW *= r; drawH = availH;
+  }
+  pdf.addImage(img, "JPEG", (pw - drawW) / 2, margin + (availH - drawH) / 2, drawW, drawH);
   return { blob: pdf.output("blob"), base64: pdf.output("datauristring").split(",")[1] };
 }
 function b2CertFileName() {
@@ -1859,6 +1973,7 @@ function b2WireFinish() {
   });
   const dl = document.getElementById("b2-cert-download");
   if (dl) dl.addEventListener("click", b2DownloadCertificatePdf);
+  window.addEventListener("resize", () => { if (document.getElementById("b2-cert-grid")) b2FitCertBoard(); });
   b2RenderCertificate();
 }
 
@@ -1962,7 +2077,8 @@ function b2Init() {
     tab.className = "tab";
     tab.dataset.target = t.target;
     tab.dataset.badge  = "2";
-    tab.innerHTML = `<span class="tab-num">${t.num}</span> ${t.label}`;
+    tab.innerHTML = `<span class="tab-num">${t.num}</span> ${t.label}` +
+      (t.mins ? ` <span class="tab-time">~${t.mins}m</span>` : "");
     tab.addEventListener("click", () => showPanel(t.target));
     tabsNav.appendChild(tab);
 
@@ -1970,6 +2086,12 @@ function b2Init() {
     section.id        = t.target;
     section.className = "panel";
     section.innerHTML = t.build();
+    // time-box each step: show a suggested duration in its header
+    if (t.mins) {
+      const head = section.querySelector(".level-head");
+      if (head) head.insertAdjacentHTML("beforeend",
+        `<div class="b2-time-box">⏱ about ${t.mins} min</div>`);
+    }
     main.appendChild(section);
   });
 
