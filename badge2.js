@@ -403,7 +403,7 @@ function b2RenderTools() {
 function b2RenderLegend() {
   const el = document.getElementById("b2-legend");
   if (el) el.innerHTML =
-    `${B2.skin.P} player &nbsp;•&nbsp; ${B2.skin.H} goal &nbsp;•&nbsp; ${B2.skin.C} item &nbsp;•&nbsp; 🔑 key &nbsp;•&nbsp; 🚪 door &nbsp;•&nbsp; dark = wall`;
+    `${B2.skin.P} player &nbsp;•&nbsp; ${B2.skin.H} goal &nbsp;•&nbsp; ${B2.skin.C} item &nbsp;•&nbsp; 🔑 key &nbsp;•&nbsp; 🚪 door &nbsp;•&nbsp; 🧱 = wall`;
 }
 /* "when robot touches …" options, with the themed icons */
 function b2TouchTileOpts() {
@@ -784,8 +784,7 @@ function b2WinGame() {
           ? [{ label: "↻ Play again", primary: true, onClick: () => { b2HideModal(); b2PlayerStart(); } }]
           : [{ label: "↻ Play again", onClick: () => { b2HideModal(); b2PlayerStart(); } },
              { label: "Make your own →", primary: true, onClick: () => { b2HideModal(); b2ExitShared(); } }])
-      : [{ label: "Keep building", onClick: () => { b2HideModal(); b2PlayerStop(); } },
-         { label: "🔗 Share it", primary: true, onClick: () => { b2HideModal(); b2PlayerStop(); showPanel("b2-share"); } }],
+      : [{ label: "Got it! 🎉", primary: true, onClick: () => { b2HideModal(); b2PlayerStop(); } }],
   });
 }
 
@@ -851,6 +850,7 @@ function b2RenderScripts() {
     empty.className = "program-empty";
     empty.textContent = "No blocks yet — drag an Event block here to start. (With no blocks, the arrow keys and arrow pad do nothing.)";
     list.appendChild(empty);
+    B2_SESSION.saveScripts(); // persist the empty state too, so a clear survives a refresh
     return;
   }
   B2.scripts.forEach((block, i) => list.appendChild(b2RenderBlock(block, B2.scripts, i)));
@@ -1273,7 +1273,7 @@ function b2BuildPlan() {
 
       <p>Here's what you're making: a maze that a robot (or whatever character you pick) explores one step at a time.</p>
       <ul class="b2-plan-summary">
-        <li>You draw the maze and decide what's in it — cookies to grab, plus keys and locked doors.</li>
+        <li>You draw the maze and decide what's in it — items to grab, keys, and locked doors.</li>
         <li>You write simple snap-together rules, like <em>WHEN the robot touches the cookie → pick it up</em>, that decide what each piece does.</li>
         <li>Then you hand your device to another Girl Scout, who <strong>playtests</strong> your game with just the arrow keys — no coding needed to play.</li>
         <li>You use her feedback to <strong>improve</strong> your maze, and test again — that's <em>iteration</em>! Keep going until it's just right.</li>
@@ -1358,7 +1358,7 @@ function b2BuildBuild() {
             <li><span class="b2-guide-ico">🟣</span><div><b>Actions</b> — <i>pick it up</i>, <i>open the door</i>, <i>win the game</i>, <i>show message</i>.</div></li>
             <li><span class="b2-guide-ico">🟠</span><div><b>Control</b> — <i>if carrying a key</i>, <i>if all cookies collected</i> — put blocks inside to run them only when it's true.</div></li>
           </ul>
-          <p style="font-size:0.85rem; color:#6b5d7d; margin-top:6px;">Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door stays solid like a wall. Remove a block with ✕.</p>
+          <p style="font-size:0.85rem; color:#6b5d7d; margin-top:6px;">Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door stays solid like a wall. Remove a block with the eraser.</p>
         </div>
       </div>
     </details>

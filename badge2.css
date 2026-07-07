@@ -159,7 +159,7 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 #b2-discover .flip-back h3 { margin-top: 0; }
 /* pin the source + flip-back hint to the bottom; extra space lands between the
    summary and the source */
-#b2-discover .flip-back .b2-source { margin-top: auto; }
+#b2-discover .flip-back .b2-source { margin-top: auto; align-self: flex-start; }
 /* subtle "flip me" hint at the bottom of each face */
 #b2-discover .flip-hint {
   display: block;
@@ -432,6 +432,16 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 #b2-build .b2-game-box .maze-size .cond-select { font-size: 0.78rem; padding: 4px 8px; border-radius: 8px; }
 #b2-build .b2-skins { gap: 8px 16px; margin-bottom: 10px; }
 #b2-build .b2-skins .cond-select { font-size: 1.2rem; padding: 4px 7px; }
+/* on large screens there's room, so grow the game-pod buttons and the Size
+   dropdown to match the icon dropdowns (.b2-skins .cond-select) above.
+   Placed after the compact base rules so it wins at equal specificity. */
+@media (min-width: 1200px) {
+  #b2-build .b2-game-box .maze-tool,
+  #b2-build .b2-game-box .maze-size .cond-select {
+    font-size: 1.2rem;
+    padding: 4px 7px;
+  }
+}
 
 /* Badge 2: the player stays a 🤖 while the game runs (Badge 1 keeps its arrow).
    Replace the rotating blue arrow with the robot emoji and don't rotate it. */
@@ -473,6 +483,8 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   gap: 10px;
   flex-wrap: wrap;
 }
+/* make the "Clear blocks" button more compact than the maze tool default */
+#b2-clear-scripts { padding: 5px 10px; font-size: 0.8rem; }
 /* hide the run message bar when it's empty (no instruction shown during play) */
 #msg-b2:empty { display: none; }
 /* When the code pod itself (not the window) gets too narrow to hold the
