@@ -889,8 +889,8 @@ body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
 }
-.b2-cert-answer b { font-size: 0.94rem; color: #6b5d7d; }
-.b2-cert-answer span { font-size: 1.05rem; line-height: 1.4; }
+.b2-cert-answer b { font-size: 0.96rem; color: #000; }
+.b2-cert-answer span { font-size: 0.88rem; line-height: 1.4; }
 .b2-cert-skills { border-top: 2px dashed #e7d9f4; padding-top: 12px; }
 .b2-cert-skills h4 { margin: 0 0 8px; color: var(--purple); font-size: 1.12rem; }
 .b2-cert-skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
