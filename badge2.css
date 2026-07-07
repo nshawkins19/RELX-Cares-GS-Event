@@ -244,32 +244,22 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   font-size: 0.74rem;
 }
 
-/* Step 4 stacks vertically: full-width game stage, then settings,
-   then the code area (palette on the left, scripts on the right). */
-/* Mobile-first: stack the pods (settings → maze → code) so the maze is
-   visible without scrolling past the code. */
+/* Step 4: mimic the Scratch editor layout — the maze "stage" and the
+   code palette/scripts sit side by side, ALWAYS (laptop, tablet, and
+   landscape phone alike), so a builder never has to scroll to see both at
+   once. Game settings stay a full-width strip on top. If a pod is hidden
+   (shared/embed mode) the remaining one grows to fill the row. */
 .b2-build-workspace {
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
   margin-top: 18px;
 }
-/* Desktop: mimic the Scratch editor layout —
-   blocks palette + script canvas on the left/middle (dominant, like Scratch's
-   code area), and the maze as the "stage" on the right. Game settings stay a
-   full-width strip on top. If a pod is hidden (shared/embed mode) the remaining
-   one grows to fill the row. Below this width (phones + most tablets) the pods
-   stack, which gives the maze the full width and reads well on touch devices. */
-@media (min-width: 1100px) {
-  .b2-build-workspace {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
-  #b2-settings   { flex: 1 1 100%; order: 0; }
-  .b2-scripts-box { order: 1; flex: 3 1 440px; min-width: 0; } /* palette + scripts */
-  .b2-game-box    { order: 2; flex: 2 1 420px; min-width: 0; } /* the "stage" */
-}
+#b2-settings    { flex: 1 1 100%; order: 0; }
+.b2-scripts-box { order: 1; flex: 3 1 320px; min-width: 0; } /* palette + scripts */
+.b2-game-box    { order: 2; flex: 2 1 280px; min-width: 0; } /* the "stage" */
 /* Large screens: let the build workspace break out past the 1080px page cap so
    the maze "stage" can grow. Centered via negative inline margins relative to
    <main>. The header/settings above stay at the normal page width. */
@@ -279,10 +269,48 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
     margin-inline: calc(50% - min(96vw, 1440px) / 2);
   }
 }
+/* Like Scratch's stage/canvas panels: cap the game and code pods to
+   whatever viewport height is left once they're scrolled into view, and
+   let each pod scroll INTERNALLY instead of the page. That's what keeps
+   the maze and the code blocks visible together — no scrolling back and
+   forth between them once you reach the workspace. */
+.b2-game-box,
+.b2-scripts-box {
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+}
+.b2-code-scripts { min-height: 0; }
 /* roomier padding on the Build-stage pods (16px → 26px) */
 #b2-build .box { padding: 26px; }
 /* keep the game pod clear of the sticky tab bar when scrolled to */
 .b2-game-box { scroll-margin-top: 84px; }
+
+/* ---- Narrow portrait phones: side-by-side has no room to shrink into
+   usefully, so ask for landscape instead (same idea as mobile games) —
+   landscape phones are wide enough to use the normal layout above. ---- */
+.b2-rotate-gate { display: none; }
+@media (max-width: 600px) and (orientation: portrait) {
+  #b2-build .b2-build-body { display: none; }
+  .b2-rotate-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    background: #fff;
+    border-radius: 20px;
+    padding: 34px 22px;
+    box-shadow: var(--shadow);
+    max-width: 420px;
+    margin: 18px auto;
+  }
+  .b2-rotate-gate-emoji { font-size: 2.4rem; animation: b2-rotate-nudge 1.6s ease-in-out infinite; }
+  .b2-rotate-gate p { margin: 0; line-height: 1.5; color: var(--ink); }
+}
+@keyframes b2-rotate-nudge {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-90deg); }
+}
 
 /* full-width game stage — keep the maze centered */
 .b2-game-box .stage-wrap { display: flex; justify-content: center; }
@@ -530,8 +558,9 @@ body.b2-embed .badge-switch,
 body.b2-embed #tabs,
 body.b2-embed .site-footer,
 body.b2-embed #b2-build > .level-head,
-body.b2-embed #b2-build > .b2-quickstart,
-body.b2-embed #b2-build > .b2-guide,
+body.b2-embed #b2-build > .b2-rotate-gate,
+body.b2-embed #b2-build .b2-quickstart,
+body.b2-embed #b2-build .b2-guide,
 body.b2-embed #b2-build #b2-shared-hint,
 body.b2-embed #b2-build [data-b2goto],
 body.b2-embed .b2-game-box > h3 { display: none !important; }

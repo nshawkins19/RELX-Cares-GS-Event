@@ -65,6 +65,8 @@ The user reverted an earlier keys/doors expansion of Badge 1's sandbox; **Badge 
 
 **Step 4 has a `<details class="b2-guide">` panel** ("how the pieces & code blocks work") explaining each maze piece and the four block categories.
 
+**Build-step layout (Step 4):** the maze "stage" (`.b2-game-box`) and the code palette/scripts (`.b2-scripts-box`) now sit **side by side at all widths** (`.b2-build-workspace` is `flex-direction: row` unconditionally, no stacked mobile-first breakpoint), each capped to `calc(100vh - 90px)` with its own `overflow-y: auto` — like Scratch's stage/canvas panels, so once you scroll to the workspace both are visible together and each scrolls internally instead of the page. Narrow **portrait** phones (`max-width: 600px and orientation: portrait`) can't fit this usefully, so instead of stacking, everything below the Step-4 heading is wrapped in `.b2-build-body` and hidden in favor of a `.b2-rotate-gate` "turn your device sideways" card; landscape phones (and tablets, even in portrait) get the normal side-by-side layout untouched. `body.b2-embed` selectors were updated from `#b2-build > .b2-quickstart`/`.b2-guide` (direct-child) to descendant selectors since they're now nested one level deeper inside `.b2-build-body`.
+
 ## History / decisions (don't undo these)
 1. Keys/doors were first added to the Badge 1 sandbox, then **reverted** — Badge 1 back to original.
 2. Pushable blocks (`B` + Push) were added.
@@ -72,6 +74,7 @@ The user reverted an earlier keys/doors expansion of Badge 1's sandbox; **Badge 
 4. The rule editor first used plain dropdown form-cards; the user found them un-Badge-1-like and the options confusing, so it was rebuilt as **full Badge-1 drag-and-drop blocks** with **simplified, concrete rule types**.
 5. **The rule editor was then refactored into a Scratch-style event-script editor** (current state): color-coded categorized palette, event "hat" blocks with nested action/control bodies, and a script-driven engine. Movement keys are now programmable (`whenKey → move`). Share bumped to `v:5` with `v:4` back-compat. This added the 2 extra app.js drag-engine hooks (findById/ownArrays). The underlying maze/collision/collect/unlock/push/win mechanics were preserved, just re-expressed as scripts.
 6. **The pushable crate/block mechanic was removed from Badge 2** across all stages (Plan peek/checklist, Build tool+guide, engine, share converter, legend). The 📦 emoji remains only as an optional *Item* skin (unrelated to the crate). Shared `app.js` push code left intact for Badge 1.
+7. **Build-step layout changed from mobile-first-stacked to always-side-by-side** so the maze and code blocks are visible together without scrolling on laptop/tablet/landscape-phone; narrow portrait phones get a rotate-to-landscape prompt instead of a squeezed stack. See "Build-step layout" note above.
 
 ## User preferences
 - **Scope-sensitive:** keep changes tightly targeted; don't expand into unrequested areas; keep Badge 1 untouched. Confirm scope before big changes.

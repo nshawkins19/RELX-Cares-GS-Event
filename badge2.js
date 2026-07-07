@@ -1293,6 +1293,13 @@ function b2BuildBuild() {
   const sizes = B2_SIZES.map((n) => `<option value="${n}"${n === B2_DEFAULT_SIZE ? " selected" : ""}>${n} × ${n}</option>`).join("");
   return `
     <div class="level-head"><h2>Step 4 — Build &amp; Test</h2><span class="difficulty medium">Make it real</span></div>
+
+    <div class="b2-rotate-gate">
+      <span class="b2-rotate-gate-emoji">🔄📱</span>
+      <p><strong>Turn your device sideways!</strong><br>The maze and the code blocks need a bit more room to sit side by side — rotate to landscape to build your game.</p>
+    </div>
+
+    <div class="b2-build-body">
     <ol class="b2-quickstart">
       <li><span class="b2-qs-num">1</span><div><b>Draw your maze</b> with the paint tools.</div></li>
       <li><span class="b2-qs-num">2</span><div><b>Snap an Event block</b>, then drop an action under it.</div></li>
@@ -1398,7 +1405,8 @@ function b2BuildBuild() {
         </div>
       </div>
     </div>
-    <button class="btn btn-primary" data-b2goto="b2-share" style="margin-top:18px;">Next: Share &amp; improve →</button>`;
+    <button class="btn btn-primary" data-b2goto="b2-share" style="margin-top:18px;">Next: Share &amp; improve →</button>
+    </div>`;
 }
 
 function b2BuildShare() {
