@@ -1422,36 +1422,59 @@ function b2BuildShare() {
   return `
     <div class="level-head"><h2>Step 5 — Share &amp; Improve</h2></div>
     <div class="b2-intro-card b2-prose">
-      <p>The best part of a big project is <strong>sharing</strong> it. When people play your game, you see what they enjoy — and get ideas to make it better. Even after a game comes out, makers keep improving it. That's <em>iteration</em>!</p>
+      <p>Real game makers make their games better by <strong>playtesting</strong> — watching someone else play and listening to their ideas. Then they improve, and test again. That's <em>iteration</em>!</p>
 
-      <h3 style="color:var(--purple);">🎮 Your finished game</h3>
-      <p>Here's the game you built — <strong>play it right here!</strong> Use the arrow keys or the on-screen buttons. (It updates whenever you change your game in the Build step.)</p>
+      <details class="b2-guide b2-share-how" open>
+        <summary>🔁 How playtesting works — read this first!</summary>
+        <div class="b2-guide-body">
+          <ol class="b2-share-steps">
+            <li><span class="b2-qs-num">1</span><div><b>Hand your device to another Girl Scout.</b> She is your <b>playtester</b>.</div></li>
+            <li><span class="b2-qs-num">2</span><div>She <b>plays your game</b> below, then fills out the <b>playtester feedback</b> — the checklist and the two questions.</div></li>
+            <li><span class="b2-qs-num">3</span><div>She <b>hands the device back to you.</b></div></li>
+            <li><span class="b2-qs-num">4</span><div>You read her feedback and go <b>back to Build</b> to improve your maze.</div></li>
+            <li><span class="b2-qs-num">5</span><div>Test again with a new player. Keep going until you love it — then head to <b>Finish</b>! 🏆</div></li>
+          </ol>
+        </div>
+      </details>
+
+      <h3 style="color:var(--purple);">🎮 Play the game</h3>
+      <p><b>Playtester:</b> play the game here with the arrow keys or the on-screen buttons.</p>
       <div class="b2-embed-wrap">
-        <iframe id="b2-embed-frame" class="b2-embed-frame" title="Your finished game — play it here"></iframe>
+        <iframe id="b2-embed-frame" class="b2-embed-frame" title="Play the game here"></iframe>
       </div>
-      <p class="b2-embed-empty" id="b2-embed-empty" hidden>Add a 🤖 player start and a 🏠 goal in the <strong>Build</strong> step, then come back to play your game here.</p>
+      <p class="b2-embed-empty" id="b2-embed-empty" hidden>Add a 🤖 player start and a 🏠 goal in the <strong>Build</strong> step, then come back to play the game here.</p>
 
-      <h3 style="color:var(--purple); margin-top:22px;">🧪 Playtest checklist</h3>
-      <p>Ask a friend or family member to play. Check off what's true:</p>
-      <ul class="b2-checklist">
-        <li><input type="checkbox" id="b2-t1"><label for="b2-t1">A new player could solve the maze with the arrow keys.</label></li>
-        <li><input type="checkbox" id="b2-t2"><label for="b2-t2">It's not too easy <em>and</em> not too hard.</label></li>
-        <li><input type="checkbox" id="b2-t3"><label for="b2-t3">The start and win messages make sense.</label></li>
-        <li><input type="checkbox" id="b2-t4"><label for="b2-t4">My game teaches or helps with something.</label></li>
-        <li><input type="checkbox" id="b2-t5"><label for="b2-t5">A friend played it and had fun!</label></li>
-      </ul>
+      <div class="b2-tester-panel">
+        <h3>👋 Playtester feedback</h3>
+        <p class="b2-tester-note">This part is for the friend who tested the game. Be honest and kind — your ideas help make the game even better!</p>
 
-      <div class="b2-reflect">
-        <label for="b2-improve">✏️ What will you change to make your game better next time? (your <em>next iteration</em>)</label>
-        <textarea id="b2-improve" rows="3" placeholder="Next, I will…"></textarea>
+        <p style="font-weight:700; margin:10px 0 6px;">🧪 Check off what's true:</p>
+        <ul class="b2-checklist">
+          <li><input type="checkbox" id="b2-t1"><label for="b2-t1">I could solve the maze with the arrow keys.</label></li>
+          <li><input type="checkbox" id="b2-t2"><label for="b2-t2">It wasn't too easy <em>and</em> not too hard.</label></li>
+          <li><input type="checkbox" id="b2-t3"><label for="b2-t3">The start and win messages made sense.</label></li>
+          <li><input type="checkbox" id="b2-t4"><label for="b2-t4">The game teaches or helps with something.</label></li>
+          <li><input type="checkbox" id="b2-t5"><label for="b2-t5">I had fun playing it!</label></li>
+        </ul>
+
+        <div class="b2-reflect">
+          <label for="b2-liked">⭐ What did you like <em>most</em> about this game?</label>
+          <textarea id="b2-liked" rows="2" placeholder="The part I liked best was…"></textarea>
+
+          <label for="b2-improve" style="margin-top:12px;">🔧 What is <em>one thing</em> that could be even better?</label>
+          <textarea id="b2-improve" rows="2" placeholder="One idea to make it better…"></textarea>
+        </div>
+      </div>
+
+      <div class="b2-callout">🎨 <b>Game maker:</b> read your playtester's feedback, then use it to make your maze better!</div>
+
+      <div class="b2-share-actions">
+        <button class="btn" data-b2goto="b2-build">← Back to Build &amp; improve</button>
+        <button class="btn btn-primary" data-b2goto="b2-finish">I love my game — Finish 🏆 →</button>
       </div>
 
       <div class="b2-tip"><h3>Keep going! 💪</h3>
-        <p>Making something new takes <strong>perseverance</strong>. Every great game maker tries again and again. If at first you don't succeed: try, try again!</p></div>
-
-      <h3 style="color:var(--purple);">🎉 Almost there!</h3>
-      <p>Now you know how games are <strong>planned, built, tested, and improved</strong>. Give service by teaching a friend the game design process, or by sharing games that help science and health research.</p>
-      <button class="btn btn-primary" data-b2goto="b2-finish" style="margin-top:8px;">Next: Finish &amp; celebrate 🏆 →</button>
+        <p>Making something new takes <strong>perseverance</strong>. Every great game maker tests and improves again and again. If at first you don't succeed: try, try again!</p></div>
     </div>`;
 }
 
@@ -1615,6 +1638,7 @@ function b2WireBuild() {
 function b2WireShare() {
   ["b2-t1", "b2-t2", "b2-t3", "b2-t4", "b2-t5"].forEach((id) =>
     b2AutosaveCheck(document.getElementById(id), `share.${id}`));
+  b2Autosave(document.getElementById("b2-liked"), "share.liked");
   b2Autosave(document.getElementById("b2-improve"), "share.improve");
 }
 
@@ -1652,6 +1676,7 @@ function b2CertData() {
     challenges,
     fav: b2Load("reflect.b2-r-game", ""),
     discover: b2Load("reflect.b2-r-discover", ""),
+    liked: b2Load("share.liked", ""),
     improve: b2Load("share.improve", ""),
     checks,
   };
@@ -1710,7 +1735,8 @@ function b2RenderCertificate() {
       ${answer("🧩 Challenges I added:", d.challenges.join(" · "))}
       ${answer("🎮 A game I explored:", d.fav)}
       ${answer("🌍 A game-for-good that inspired me:", d.discover)}
-      ${answer("🔁 My next idea (iteration):", d.improve)}
+      ${answer("⭐ A playtester's favorite part:", d.liked)}
+      ${answer("🔧 Feedback I used to improve:", d.improve)}
     </div>
 
     <div class="b2-cert-skills">
