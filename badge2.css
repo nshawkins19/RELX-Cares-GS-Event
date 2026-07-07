@@ -51,6 +51,8 @@ body.view-badge-2 .tab[data-badge="1"] { display: none; }
 .b2-intro-card h2 { color: var(--purple); margin-top: 0; }
 .b2-prose { line-height: 1.7; }
 .b2-prose p { margin: 0 0 12px; }
+.b2-plan-summary { margin: 0 0 16px; padding-left: 22px; }
+.b2-plan-summary li { margin-bottom: 4px; }
 
 /* Badge-2 Start card fills the width too (scoped so Badge 1's Start is unchanged) */
 body.view-badge-2 .welcome-card { max-width: 1080px; }
@@ -85,6 +87,11 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   font-size: 0.98rem;
   color: var(--ink);
   resize: vertical;
+}
+.b2-form textarea {
+  min-height: 100px;
+  overflow: hidden;
+  resize: none;
 }
 .b2-reflect textarea:focus,
 .b2-form textarea:focus,
@@ -125,6 +132,74 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   padding: 10px 12px;
 }
 .b2-checklist input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--purple); }
+.b2-field-hint { font-size: 0.85rem; color: #6b5d7d; margin: 2px 0 8px; }
+
+/* ---------- Plan peek reference card (Step 3) ---------- */
+.b2-plan-peek { margin-bottom: 20px; }
+.b2-plan-peek-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 26px;
+  padding: 6px 4px 16px;
+}
+.b2-plan-peek-body h4 { margin: 6px 0 10px; color: var(--purple); font-size: 1rem; }
+.b2-plan-peek-note { font-size: 0.8rem; color: #6b5d7d; margin: 10px 0 0; }
+
+/* ---- Maze pieces: emoji tile + name/desc, with a clear "Looks:" chip row ---- */
+.b2-plan-piece-list { list-style: none; margin: 0; padding: 0; }
+.b2-peek-piece {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.b2-peek-emoji {
+  flex: 0 0 auto;
+  width: 2.1em; height: 2.1em;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+  background: #f6f0fc;
+  border: 1.5px solid #e7d9f4;
+  border-radius: 10px;
+}
+.b2-peek-piece-body { font-size: 0.9rem; line-height: 1.4; padding-top: 2px; }
+.b2-peek-skins { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 6px; }
+.b2-peek-skins-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #8a7ba0; }
+.b2-peek-skin {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.9em; height: 1.9em;
+  font-size: 1rem;
+  background: #fff;
+  border: 1.5px solid #e7d9f4;
+  border-radius: 8px;
+}
+
+/* ---- Code blocks: color-coded category cards with one chip per real block ---- */
+.b2-peek-groups { display: flex; flex-direction: column; gap: 10px; }
+.b2-peek-group {
+  border-left: 4px solid var(--cat);
+  background: var(--cat-soft);
+  border-radius: 10px;
+  padding: 8px 11px 10px;
+}
+.b2-peek-group-head {
+  font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--cat);
+  margin-bottom: 7px;
+}
+.b2-peek-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.b2-peek-chip {
+  background: #fff;
+  border: 1.5px solid var(--cat);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #3a2c4a;
+}
+@media (max-width: 640px) {
+  .b2-plan-peek-body { grid-template-columns: 1fr; }
+}
 
 /* ---------- Game builder (Step 4) ---------- */
 /* compact 3-step quick start (Scratch-style: short, scannable, learn-by-doing) */
@@ -171,11 +246,38 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 
 /* Step 4 stacks vertically: full-width game stage, then settings,
    then the code area (palette on the left, scripts on the right). */
+/* Mobile-first: stack the pods (settings → maze → code) so the maze is
+   visible without scrolling past the code. */
 .b2-build-workspace {
   display: flex;
   flex-direction: column;
   gap: 18px;
   margin-top: 18px;
+}
+/* Desktop: mimic the Scratch editor layout —
+   blocks palette + script canvas on the left/middle (dominant, like Scratch's
+   code area), and the maze as the "stage" on the right. Game settings stay a
+   full-width strip on top. If a pod is hidden (shared/embed mode) the remaining
+   one grows to fill the row. Below this width (phones + most tablets) the pods
+   stack, which gives the maze the full width and reads well on touch devices. */
+@media (min-width: 1100px) {
+  .b2-build-workspace {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  #b2-settings   { flex: 1 1 100%; order: 0; }
+  .b2-scripts-box { order: 1; flex: 3 1 440px; min-width: 0; } /* palette + scripts */
+  .b2-game-box    { order: 2; flex: 2 1 420px; min-width: 0; } /* the "stage" */
+}
+/* Large screens: let the build workspace break out past the 1080px page cap so
+   the maze "stage" can grow. Centered via negative inline margins relative to
+   <main>. The header/settings above stay at the normal page width. */
+@media (min-width: 1200px) {
+  .b2-build-workspace {
+    width: min(96vw, 1440px);
+    margin-inline: calc(50% - min(96vw, 1440px) / 2);
+  }
 }
 /* roomier padding on the Build-stage pods (16px → 26px) */
 #b2-build .box { padding: 26px; }
@@ -197,18 +299,25 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 .b2-skins label { font-weight: 700; color: var(--purple); display: inline-flex; align-items: center; gap: 6px; }
 .b2-skins .cond-select { border-color: var(--purple-light); }
 
-/* bigger, easier-to-read controls in the Build stage (Badge 1 sandbox unaffected) */
+/* Build-stage controls (Badge 1 sandbox unaffected) */
 #b2-build .maze-tool {
   font-size: 1rem;
   padding: 10px 15px;
   border-radius: 10px;
 }
-#b2-build .maze-size { gap: 10px; margin-bottom: 14px; }
+/* compact paint/size buttons inside the "Your game" stage pod so they don't
+   crowd the maze — leaves more room for a bigger board */
+.b2-game-box .maze-tool {
+  font-size: 0.88rem;
+  padding: 6px 11px;
+  border-radius: 9px;
+}
+#b2-build .maze-size { gap: 8px; margin-bottom: 12px; }
 #b2-build .size-label,
-#b2-build .b2-skins label { font-size: 1rem; }
-#b2-build .maze-size .cond-select { font-size: 1rem; padding: 8px 10px; }
-#b2-build .b2-skins { gap: 10px 20px; }
-#b2-build .b2-skins .cond-select { font-size: 1.4rem; padding: 5px 8px; }
+#b2-build .b2-skins label { font-size: 0.9rem; }
+#b2-build .maze-size .cond-select { font-size: 0.9rem; padding: 6px 9px; }
+#b2-build .b2-skins { gap: 8px 16px; margin-bottom: 10px; }
+#b2-build .b2-skins .cond-select { font-size: 1.2rem; padding: 4px 7px; }
 
 /* Badge 2: the player stays a 🤖 while the game runs (Badge 1 keeps its arrow).
    Replace the rotating blue arrow with the robot emoji and don't rotate it. */
@@ -234,7 +343,7 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
    scripts dropzone can fill the whole pod (see .b2-scripts-list below) */
 .b2-code-cols {
   display: grid;
-  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr);
   gap: 18px;
   align-items: stretch;
 }

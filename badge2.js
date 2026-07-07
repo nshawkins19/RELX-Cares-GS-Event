@@ -85,11 +85,10 @@ const GAMES_FOR_GOOD = [
 /* maze-builder paint tools */
 const B2_TOOLS = [
   { key: "wall",   label: "🧱 Wall" },
-  { key: "path",   label: "⬜ Path" },
+  { key: "erase",  label: "🗑️ Erase" },
   { key: "cookie", label: "🍪 Cookie" },
   { key: "key",    label: "🔑 Key" },
   { key: "door",   label: "🚪 Door" },
-  { key: "block",  label: "📦 Block" },
   { key: "robot",  label: "🤖 Robot start" },
   { key: "house",  label: "🏠 House" },
 ];
@@ -97,7 +96,7 @@ const B2_SIZES = [7, 9, 11, 13, 15];
 const B2_DEFAULT_SIZE = 9;
 /* Badge 2's game pod is full-width, so let its maze cells grow bigger than
    Badge 1's (which sits in a narrow column) to fill the space on wide screens */
-const B2_MAX_CELL = 72;
+const B2_MAX_CELL = 84;
 
 /* ---------------- Themed icons ----------------
    The player (P), the collected item (C), and the goal (H) can be re-skinned
@@ -107,7 +106,7 @@ const B2_MAX_CELL = 72;
    mechanics are identical no matter which emoji is chosen. */
 const B2_SKINS = {
   P: { label: "Player", options: ["🤖", "🤿", "👩‍🌾", "🧑‍🚀", "🧑‍⚕️", "🧑‍🚒"] },
-  C: { label: "Item",   options: ["🍪", "🗑️", "🥕", "🐶", "📦", "💊"] },
+  C: { label: "Item",   options: ["🍪", "🗑️", "🥕", "🐶", "💊"] },
   H: { label: "Goal",   options: ["🏠", "♻️", "🧺", "🐾", "🛰️", "🏥"] },
 };
 const B2_DEFAULT_SKIN = { P: "🤖", C: "🍪", H: "🏠" };
@@ -140,7 +139,6 @@ const B2_DEFAULTS = {
      ACTIONS:
        collect               pick up the cookie / key just touched
        openDoor              open the touched door (needs a key)
-       push                  shove the touched block forward
        win                   the player wins
        say      { text }     show a message
      CONTROL (hold a body):
@@ -156,7 +154,6 @@ const TOUCH_TILES = [
   { key: "C", label: "🍪 cookie" },
   { key: "K", label: "🔑 key" },
   { key: "D", label: "🚪 door" },
-  { key: "B", label: "📦 block" },
   { key: "H", label: "🏠 house" },
 ];
 
@@ -164,7 +161,7 @@ const TOUCH_TILES = [
 const B2_CATEGORIES = [
   { cls: "cat-events",  label: "Events",  hint: "when something happens", blocks: ["whenPlay", "whenKey", "whenTouch"] },
   { cls: "cat-motion",  label: "Motion",  hint: "move the robot",         blocks: ["move"] },
-  { cls: "cat-actions", label: "Actions", hint: "make something happen",  blocks: ["collect", "openDoor", "push", "win", "say"] },
+  { cls: "cat-actions", label: "Actions", hint: "make something happen",  blocks: ["collect", "openDoor", "win", "say"] },
   { cls: "cat-control", label: "Control", hint: "only run if it's true",  blocks: ["ifKey", "ifCookies"] },
 ];
 
@@ -176,7 +173,6 @@ const BLOCK_DEFS = {
   move:      { cat: "motion",  body: false, label: "move 🔼" },
   collect:   { cat: "actions", body: false, label: "pick it up 🎒" },
   openDoor:  { cat: "actions", body: false, label: "open the door 🔓" },
-  push:      { cat: "actions", body: false, label: "push it 📦" },
   win:       { cat: "actions", body: false, label: "win the game 🏆" },
   say:       { cat: "actions", body: false, label: "show message 💬" },
   ifKey:     { cat: "control", body: true,  label: "if carrying a 🔑 key",  title: "if carrying a 🔑 key" },
@@ -277,6 +273,7 @@ const B2_SESSION = {
       cols: B2.model.cols, rows: B2.model.rows,
       grid: B2.model.grid.map((r) => r.join("")),
     }));
+    b2ScheduleEmbedRefresh();
   },
   loadModel() {
     try {
@@ -288,6 +285,7 @@ const B2_SESSION = {
   saveScripts() {
     if (B2.fromShared) return;
     try { b2Save("session.scripts", JSON.stringify(B2.scripts.map(b2StripBlock))); } catch (e) {}
+    b2ScheduleEmbedRefresh();
   },
   loadScripts() {
     try {
@@ -298,6 +296,7 @@ const B2_SESSION = {
   saveSkin() {
     if (B2.fromShared) return;
     try { b2Save("session.skin", JSON.stringify(B2.skin)); } catch (e) {}
+    b2ScheduleEmbedRefresh();
   },
   loadSkin() {
     try { return b2CleanSkin(JSON.parse(b2Load("session.skin", "") || "null")); }
@@ -376,7 +375,6 @@ function b2CellVisual(ch) {
     case "H": return { cls: "open goal", txt: B2.skin.H };
     case "K": return { cls: "open key", txt: "🔑" };
     case "D": return { cls: "open door", txt: "🚪" };
-    case "B": return { cls: "open block", txt: "📦" };
     case "C": return { cls: "open cookie", txt: B2.skin.C };
     case "P": return { cls: "open start", txt: B2.skin.P };
     default:  return { cls: "open", txt: "" };
@@ -406,7 +404,7 @@ function b2RenderTools() {
 function b2RenderLegend() {
   const el = document.getElementById("b2-legend");
   if (el) el.innerHTML =
-    `${B2.skin.P} player &nbsp;•&nbsp; ${B2.skin.H} goal &nbsp;•&nbsp; ${B2.skin.C} item &nbsp;•&nbsp; 🔑 key &nbsp;•&nbsp; 🚪 door &nbsp;•&nbsp; 📦 block &nbsp;•&nbsp; dark = wall`;
+    `${B2.skin.P} player &nbsp;•&nbsp; ${B2.skin.H} goal &nbsp;•&nbsp; ${B2.skin.C} item &nbsp;•&nbsp; 🔑 key &nbsp;•&nbsp; 🚪 door &nbsp;•&nbsp; dark = wall`;
 }
 /* "when robot touches …" options, with the themed icons */
 function b2TouchTileOpts() {
@@ -414,17 +412,21 @@ function b2TouchTileOpts() {
     { key: "C", label: `${B2.skin.C} item` },
     { key: "K", label: "🔑 key" },
     { key: "D", label: "🚪 door" },
-    { key: "B", label: "📦 block" },
     { key: "H", label: `${B2.skin.H} goal` },
   ];
 }
 /* fill the icon-picker dropdowns and keep them in sync with B2.skin */
+const B2_SKIN_NAMES = {
+  "🤖": "Robot", "🤿": "Diver", "👩‍🌾": "Farmer", "🧑‍🚀": "Astronaut", "🧑‍⚕️": "Doctor", "🧑‍🚒": "Firefighter",
+  "🏠": "House", "♻️": "Recycle", "🧺": "Laundry", "🐾": "Paw", "🛰️": "Satellite", "🏥": "Hospital",
+  "🍪": "Cookie", "🗑️": "Trash", "🥕": "Carrot", "🐶": "Puppy", "💊": "Pill",
+};
 function b2RenderSkinSelectors() {
   Object.keys(B2_SKINS).forEach((role) => {
     const sel = document.getElementById(`b2-skin-${role}`);
     if (!sel) return;
     sel.innerHTML = B2_SKINS[role].options
-      .map((e) => `<option value="${e}"${e === B2.skin[role] ? " selected" : ""}>${e}</option>`).join("");
+      .map((e) => `<option value="${e}" title="${B2_SKIN_NAMES[e] || e}"${e === B2.skin[role] ? " selected" : ""}>${e}</option>`).join("");
     sel.value = B2.skin[role];
   });
 }
@@ -511,10 +513,10 @@ function b2Paint(x, y) {
     case "wall":
       if (here === "P" || here === "H") { b2Msg("bad", "Move the 🤖 robot or 🏠 house before drawing a wall there."); return; }
       grid[y][x] = "#"; break;
-    case "path": grid[y][x] = "."; break;
-    case "cookie": case "key": case "door": case "block":
+    case "erase": grid[y][x] = "."; break;
+    case "cookie": case "key": case "door":
       if (here === "P" || here === "H") { b2Msg("bad", "That square has the 🤖 robot or 🏠 house on it."); return; }
-      grid[y][x] = { cookie: "C", key: "K", door: "D", block: "B" }[B2.tool]; break;
+      grid[y][x] = { cookie: "C", key: "K", door: "D" }[B2.tool]; break;
     case "robot": {
       const old = b2FindChar(grid, "P"); if (old) grid[old.y][old.x] = ".";
       grid[y][x] = "P"; break;
@@ -562,7 +564,7 @@ function b2SyncLevel() {
    Script engine — runs the player's event scripts.
    Drivers: a key press fires matching "when … pressed" hats; the
    move action fires "when robot touches …" hats for the tile it
-   meets.  Door / block tiles are bumped (their touch script may
+   meets.  Door tiles are bumped (their touch script may
    clear them before the robot enters); cookie / key / house tiles
    are stepped onto first, then their touch script fires.
    ============================================================ */
@@ -589,7 +591,6 @@ function b2RunBlock(block) {
     case "move":      return b2DoMove(block.dir);
     case "collect":   b2DoCollect();  return "ok";
     case "openDoor":  b2DoOpenDoor(); return "ok";
-    case "push":      b2DoPush();     return "ok";
     case "say":       if (block.text) b2Msg("info", block.text); return "ok";
     case "win":       return "win";
     case "ifKey":     return b2ps.keys > 0 ? b2RunBody(block.body) : "ok";
@@ -609,10 +610,10 @@ function b2DoMove(dir) {
   const tile = b2ps.grid[ny][nx];
   if (tile === "#") { placeRobot(b2game, b2ps, false); return "ok"; }
 
-  // door / block: their touch script acts before we decide to enter
-  if (tile === "D" || tile === "B") {
+  // door: its touch script acts before we decide to enter
+  if (tile === "D") {
     b2RunTouch(tile, nx, ny, d[0], d[1]);
-    if (b2ps.grid[ny][nx] === ".") { b2ps.x = nx; b2ps.y = ny; } // opened / pushed away
+    if (b2ps.grid[ny][nx] === ".") { b2ps.x = nx; b2ps.y = ny; } // opened
     placeRobot(b2game, b2ps, false);
     return "ok";
   }
@@ -662,18 +663,6 @@ function b2DoOpenDoor() {
   b2ps.grid[ty][tx] = ".";
   applyEvent(b2game, { type: "unlock", x: tx, y: ty });
   updateCarry(b2game, b2ps.keys);
-}
-
-function b2DoPush() {
-  if (!b2ctx) return;
-  const { tx, ty, dx, dy } = b2ctx;
-  if (b2ps.grid[ty][tx] !== "B") return;
-  const bx = tx + dx, by = ty + dy;
-  if (inBounds(b2ps.grid, bx, by) && b2ps.grid[by][bx] === ".") {
-    b2ps.grid[ty][tx] = ".";
-    b2ps.grid[by][bx] = "B";
-    applyEvent(b2game, { type: "push", from: { x: tx, y: ty }, to: { x: bx, y: by } });
-  }
 }
 
 /* ============================================================
@@ -939,7 +928,6 @@ function b2BlockFace(block, container) {
     case "move":      txt("move"); sel(DIR_OPTS, block.dir, (v) => (block.dir = v)); break;
     case "collect":   txt("pick it up 🎒"); break;
     case "openDoor":  txt("open the door 🔓"); break;
-    case "push":      txt("push it forward 📦"); break;
     case "win":       txt("the player wins! 🏆"); break;
     case "say": {
       txt("show message");
@@ -1012,7 +1000,6 @@ function b2RulesToScripts(rules) {
   (rules || []).forEach((r) => {
     if (r.type === "collect")   touch(r.tile === "K" ? "K" : "C", [b2MakeBlock("collect")]);
     else if (r.type === "door") { const i = b2MakeBlock("ifKey"); i.body = [b2MakeBlock("openDoor")]; touch("D", [i]); }
-    else if (r.type === "push") touch("B", [b2MakeBlock("push")]);
     else if (r.type === "win") {
       if (r.when === "always") touch("H", [b2MakeBlock("win")]);
       else { const i = b2MakeBlock("ifCookies"); i.body = [b2MakeBlock("win")]; touch("H", [i]); }
@@ -1037,6 +1024,7 @@ function b2DecodeGame(code) {
 /* embed the user's built game (board + the code they wrote) as a playable
    mini-app: a same-origin iframe that loads this page in "embed" mode with
    the game encoded in the hash, reusing the whole engine + shared-play flow */
+let _b2EmbedReady = false; // true once the iframe has fully loaded once
 function b2RefreshEmbed() {
   const frame = document.getElementById("b2-embed-frame");
   const empty = document.getElementById("b2-embed-empty");
@@ -1044,7 +1032,28 @@ function b2RefreshEmbed() {
   const ready = !!(b2FindChar(B2.model.grid, "P") && b2FindChar(B2.model.grid, "H"));
   frame.hidden = !ready;
   if (empty) empty.hidden = ready;
-  frame.src = ready ? `${location.pathname}?embed=1#play=${b2EncodeGame()}` : "about:blank";
+  if (!ready) {
+    frame.src = "about:blank";
+    _b2EmbedReady = false;
+    return;
+  }
+  const code = b2EncodeGame();
+  if (_b2EmbedReady) {
+    // iframe already loaded — push the update without reloading
+    frame.contentWindow.postMessage({ type: "b2update", code }, location.origin);
+  } else {
+    frame.src = `${location.pathname}?embed=1#play=${code}`;
+    frame.onload = () => { _b2EmbedReady = true; };
+  }
+}
+
+let _b2EmbedTimer = null;
+function b2ScheduleEmbedRefresh() {
+  if (B2.fromShared) return;
+  const frame = document.getElementById("b2-embed-frame");
+  if (!frame) return; // Share tab not rendered yet
+  clearTimeout(_b2EmbedTimer);
+  _b2EmbedTimer = setTimeout(b2RefreshEmbed, 600);
 }
 
 function b2OpenShared(code) {
@@ -1185,24 +1194,96 @@ function b2BuildExplore() {
     </div>`;
 }
 
+/* Plan step "peek" reference — plain text/emoji, generated from the real
+   skin options / block labels / direction & touch lists so it can't drift
+   out of sync with Build, without reusing Build's actual UI widgets. */
+function b2PlanPeekPiecesHTML() {
+  const row = (icon, name, desc, role) => {
+    const skins = role
+      ? `<div class="b2-peek-skins"><span class="b2-peek-skins-label">Looks:</span>${
+          B2_SKINS[role].options.map((e) => `<span class="b2-peek-skin">${e}</span>`).join("")}</div>`
+      : "";
+    return `<li class="b2-peek-piece">
+      <span class="b2-peek-emoji">${icon}</span>
+      <div class="b2-peek-piece-body"><b>${name}</b> — ${desc}${skins}</div>
+    </li>`;
+  };
+  return [
+    row(B2.skin.P, "Player", "moves with the arrow keys or on-screen pad", "P"),
+    row(B2.skin.H, "Goal", "where the player is trying to reach", "H"),
+    row(B2.skin.C, "Item", "something to collect along the way", "C"),
+    row("🔑", "Key", "collect it so the player can open doors"),
+    row("🚪", "Door", "locked until the player is carrying a key"),
+    row("🧱", "Wall", "always solid, forms the maze paths"),
+  ].join("");
+}
+function b2PlanPeekBlocksHTML() {
+  const dirArrows  = DIR_LIST.map((d) => DIR_LABEL[d].split(" ")[0]).join(" ");   // ▲ ▼ ◀ ▶
+  const touchIcons = TOUCH_TILES.map((t) => t.label.split(" ")[0]).join(" ");     // 🍪 🔑 🚪 🏠
+  const group = (cls, dot, label, chips) => `
+    <div class="b2-peek-group ${cls}">
+      <div class="b2-peek-group-head">${dot} ${label}</div>
+      <div class="b2-peek-chips">${chips.map((c) => `<span class="b2-peek-chip">${c}</span>`).join("")}</div>
+    </div>`;
+  const events  = ["when ▶ Play clicked", `when arrow pressed ${dirArrows}`, `when robot touches ${touchIcons}`];
+  const motion  = DIR_LIST.map((d) => `move ${DIR_LABEL[d]}`);
+  const actions = B2_CATEGORIES.find((c) => c.cls === "cat-actions").blocks.map((t) => BLOCK_DEFS[t].label);
+  const control = B2_CATEGORIES.find((c) => c.cls === "cat-control").blocks.map((t) => b2PaletteLabel(t));
+  return group("cat-events",  "🟡", "Events",  events)
+       + group("cat-motion",  "🔵", "Motion",  motion)
+       + group("cat-actions", "🟣", "Actions", actions)
+       + group("cat-control", "🟠", "Control", control);
+}
+
 function b2BuildPlan() {
   return `
     <div class="level-head"><h2>Step 3 — Plan</h2><span class="difficulty medium">Plan your maze game</span></div>
     <div class="b2-intro-card b2-prose">
-      <p>Game makers <strong>plan</strong> before they build. That's part of the <em>game design process</em>: plan → build → test → improve → share. Fill in your plan — you'll use it in the next step!</p>
+      <p>Game makers <strong>plan</strong> before they build. That's part of the <em>game design process</em>: plan → build → test → improve → share. Use the reference below, then fill in your plan — you'll use it in the next step!</p>
+
+      <p>Here's what you're making: a maze that a robot (or whatever character you pick) explores one step at a time.</p>
+      <ul class="b2-plan-summary">
+        <li>You draw the maze and decide what's in it — cookies to grab, plus keys and locked doors.</li>
+        <li>You write simple snap-together rules, like <em>WHEN the robot touches the cookie → pick it up</em>, that decide what each piece does.</li>
+        <li>Once it's built, a friend can play your finished game with just the arrow keys — no coding required on their end.</li>
+        <li>You can send them a link so they can try it right in their browser.</li>
+      </ul>
+
+      <details class="b2-guide b2-plan-peek" open>
+        <summary>🗺️ What you'll be able to build — tap to expand/collapse</summary>
+        <div class="b2-plan-peek-body">
+          <div class="b2-plan-peek-col">
+            <h4>Maze pieces</h4>
+            <ul class="b2-plan-piece-list">${b2PlanPeekPiecesHTML()}</ul>
+            <p class="b2-plan-peek-note">You can also pick different emoji for the player, item, and goal to match your game's theme (ocean, garden, space, and more).</p>
+          </div>
+          <div class="b2-plan-peek-col">
+            <h4>Code blocks</h4>
+            <div class="b2-peek-groups">${b2PlanPeekBlocksHTML()}</div>
+            <p class="b2-plan-peek-note">Blocks snap together like puzzle pieces. You'll drag them in the next step.</p>
+          </div>
+        </div>
+      </details>
+
       <form class="b2-form" onsubmit="return false">
         <div class="field"><label for="b2-p-title">🎮 What's your game called?</label><input type="text" id="b2-p-title" placeholder="The Cookie Quest" /></div>
         <div class="field"><label for="b2-p-problem">💡 How does your game help, teach, or solve a problem ("for good")?</label><textarea id="b2-p-problem" rows="2" placeholder="My game teaches…"></textarea></div>
-        <div class="field"><label for="b2-p-goal">🏁 What is the player trying to do?</label><textarea id="b2-p-goal" rows="2" placeholder="The player has to…"></textarea></div>
-        <div class="field"><label>🧩 What challenges will you add? (check the ones you'll use)</label>
+        <div class="field"><label for="b2-p-goal">🏁 What is the player trying to do to win?</label><textarea id="b2-p-goal" rows="2" placeholder="The player has to reach the goal after collecting all the items…"></textarea></div>
+        <div class="field">
+          <label>🧩 What will make your maze interesting or tricky? (pick any that fit your idea)</label>
+          <p class="b2-field-hint">Don't worry about the exact pieces yet — just think about the experience you want the player to have.</p>
           <ul class="b2-checklist">
-            <li><input type="checkbox" id="b2-p-c1"><label for="b2-p-c1">🧱 Walls and a tricky path</label></li>
-            <li><input type="checkbox" id="b2-p-c2"><label for="b2-p-c2">🔑 Keys and 🚪 locked doors</label></li>
-            <li><input type="checkbox" id="b2-p-c3"><label for="b2-p-c3">🍪 Cookies to collect</label></li>
-            <li><input type="checkbox" id="b2-p-c5"><label for="b2-p-c5">📦 Pushable blocks</label></li>
+            <li><input type="checkbox" id="b2-p-c1"><label for="b2-p-c1">🧱 A winding or confusing path</label></li>
+            <li><input type="checkbox" id="b2-p-c3"><label for="b2-p-c3">🍪 Something to collect before reaching the goal</label></li>
+            <li><input type="checkbox" id="b2-p-c2"><label for="b2-p-c2">🔑 A key to find and a 🚪 locked door to open</label></li>
+            <li><input type="checkbox" id="b2-p-c6"><label for="b2-p-c6">💬 A message that pops up at the start or when something happens</label></li>
           </ul>
         </div>
-        <div class="field"><label for="b2-p-rule">⚙️ Write one rule you'll code: <em>WHEN … → THEN …</em></label><textarea id="b2-p-rule" rows="2" placeholder="WHEN the robot reaches a 🍪 cookie → pick it up"></textarea></div>
+        <div class="field">
+          <label for="b2-p-rule">⚙️ Describe one rule your game will follow: <em>WHEN [something happens] → THEN [what occurs]</em></label>
+          <p class="b2-field-hint">In the Build step you'll turn this into a real code block. Example: <em>WHEN the player reaches the 🏠 goal → win the game</em></p>
+          <textarea id="b2-p-rule" rows="2" placeholder="WHEN the player touches a 🍪 item → pick it up"></textarea>
+        </div>
       </form>
       <button class="btn btn-primary" data-b2goto="b2-build">Next: Build it! →</button>
     </div>`;
@@ -1229,7 +1310,6 @@ function b2BuildBuild() {
             <li><span class="b2-guide-ico">🍪</span><div><b>Cookie</b> — a <b>when robot touches 🍪 → pick it up</b> script collects it.</div></li>
             <li><span class="b2-guide-ico">🔑</span><div><b>Key</b> — collect it so the robot can open doors.</div></li>
             <li><span class="b2-guide-ico">🚪</span><div><b>Door</b> — an <b>open the door</b> script opens it when the robot has a key.</div></li>
-            <li><span class="b2-guide-ico">📦</span><div><b>Block</b> — a <b>push it</b> script lets the robot shove it (if the space behind is empty).</div></li>
             <li><span class="b2-guide-ico">🧱</span><div><b>Wall</b> — always solid, no script needed.</div></li>
           </ul>
         </div>
@@ -1239,10 +1319,10 @@ function b2BuildBuild() {
           <ul>
             <li><span class="b2-guide-ico">🟡</span><div><b>Events</b> — <i>when ▶ Play clicked</i>, <i>when an arrow is pressed</i> (keyboard or the arrow pad), <i>when the robot touches</i> a piece.</div></li>
             <li><span class="b2-guide-ico">🔵</span><div><b>Motion</b> — <i>move up / down / left / right</i>.</div></li>
-            <li><span class="b2-guide-ico">🟣</span><div><b>Actions</b> — <i>pick it up</i>, <i>open the door</i>, <i>push it</i>, <i>win the game</i>, <i>show message</i>.</div></li>
+            <li><span class="b2-guide-ico">🟣</span><div><b>Actions</b> — <i>pick it up</i>, <i>open the door</i>, <i>win the game</i>, <i>show message</i>.</div></li>
             <li><span class="b2-guide-ico">🟠</span><div><b>Control</b> — <i>if carrying a key</i>, <i>if all cookies collected</i> — put blocks inside to run them only when it's true.</div></li>
           </ul>
-          <p style="font-size:0.85rem; color:#6b5d7d; margin-top:6px;">Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door or 📦 block stays solid like a wall. Remove a block with ✕.</p>
+          <p style="font-size:0.85rem; color:#6b5d7d; margin-top:6px;">Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door stays solid like a wall. Remove a block with ✕.</p>
         </div>
       </div>
     </details>
@@ -1269,9 +1349,9 @@ function b2BuildBuild() {
               <span class="size-label">Size:</span>
               <select class="cond-select" id="b2-size">${sizes}</select>
               <button class="maze-tool random" id="b2-random">🎲 Random</button>
-              <button class="maze-tool alt" id="b2-clear-maze">✖ Clear</button>
+              <button class="maze-tool alt" id="b2-clear-maze">✖ Clear Maze</button>
             </div>
-            <div class="maze-tools" id="b2-tools">${b2ToolsHTML()}</div>
+            <div class="maze-tools b2-tools-with-erase" id="b2-tools">${b2ToolsHTML()}</div>
             <div class="b2-skins" id="b2-skins">
               <span class="size-label">Icons:</span>
               <label>Player <select class="cond-select" id="b2-skin-P"></select></label>
@@ -1419,8 +1499,32 @@ function b2WireBuild() {
   document.getElementById("b2-play").addEventListener("click", b2PlayerStart);
   document.getElementById("b2-stop").addEventListener("click", () => { if (b2game.playing) b2PlayerStop(); });
 
-  ["b2-title", "b2-intro", "b2-win"].forEach((id) => b2Autosave(document.getElementById(id), `game.${id}`));
+  // Auto-expand textareas when content grows, keeping all message textareas the same height
+  const syncSettingsTextareas = () => {
+    const intro = document.getElementById("b2-intro");
+    const win = document.getElementById("b2-win");
+    if (!intro || !win) return;
+    const maxHeight = Math.max(Math.max(100, intro.scrollHeight), Math.max(100, win.scrollHeight));
+    intro.style.height = maxHeight + "px";
+    win.style.height = maxHeight + "px";
+  };
+
+  ["b2-intro", "b2-win"].forEach((id) => {
+    const el = document.getElementById(id);
+    b2Autosave(el, `game.${id}`);
+    if (el) {
+      el.addEventListener("input", () => {
+        syncSettingsTextareas();
+        b2ScheduleEmbedRefresh();
+      });
+    }
+  });
+  // Initial sync
+  syncSettingsTextareas();
+
+  // Title field (text input, not textarea)
   const titleEl = document.getElementById("b2-title");
+  b2Autosave(titleEl, "game.b2-title");
   if (titleEl && !titleEl.value) {
     const planTitle = b2Load("plan.b2-p-title", "");
     if (planTitle) { titleEl.value = planTitle; b2Save("game.b2-title", planTitle); }
@@ -1462,7 +1566,7 @@ function b2WireReflections() {
     b2Autosave(document.getElementById(id), `reflect.${id}`));
   ["b2-p-title", "b2-p-problem", "b2-p-goal", "b2-p-rule"].forEach((id) =>
     b2Autosave(document.getElementById(id), `plan.${id}`));
-  ["b2-p-c1", "b2-p-c2", "b2-p-c3", "b2-p-c5"].forEach((id) =>
+  ["b2-p-c1", "b2-p-c2", "b2-p-c3", "b2-p-c6"].forEach((id) =>
     b2AutosaveCheck(document.getElementById(id), `plan.${id}`));
 }
 
@@ -1503,6 +1607,14 @@ function b2Init() {
   if (new URLSearchParams(location.search).has("embed")) {
     document.body.classList.add("b2-embed");
     B2.fromShared = true;
+    // Listen for in-place game updates from the parent page so changes in the
+    // Build step are reflected without a full iframe reload
+    window.addEventListener("message", (e) => {
+      if (e.origin !== location.origin || e.data?.type !== "b2update") return;
+      b2game.playing = false;
+      b2scripts.playing = false;
+      b2OpenShared(e.data.code);
+    });
   }
 
   tabsNav.querySelectorAll(".tab").forEach((t) => { if (!t.dataset.badge) t.dataset.badge = "1"; });

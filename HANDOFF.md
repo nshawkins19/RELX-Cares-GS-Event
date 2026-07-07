@@ -36,17 +36,18 @@ The user reverted an earlier keys/doors expansion of Badge 1's sandbox; **Badge 
 **Session persistence (survives refresh):** the `B2_SESSION` object (in `badge2.js`) saves/restores under `gsBadge2.session.*` keys — `model` (maze grid+size), `scripts` (stripped block tree), `panel`/`badge` (where the user left off), and `visited` (Badge-2 stages they've opened → a green ✓ on the tab via `is-visited`). Saves fire on maze edits (`b2Paint`/`b2SetSize`/random), script edits (end of `b2RenderScripts` + the dropdown/text handlers in `b2BlockFace`), and navigation (the `showPanel` wrapper). Restore happens in `b2Init` (model+scripts before wiring; badge+panel at the end). **Never saves while `B2.fromShared`** (playing a friend's link isn't the user's own work), and restore is skipped when the URL is a `#play=` link. This also restores Badge-1 location on refresh (the only Badge-1-visible effect; mechanics unchanged).
 
 **Block model** (`B2.scripts` = array of top-level hat blocks). Every block is `{ id, type, … }`; `BLOCK_DEFS` is the per-type table, `B2_CATEGORIES` is the color-coded palette grouping (Events/Motion/Actions/Control). Blocks with `body: []` nest children:
-- Events (hats): `whenPlay`, `whenKey {dir}`, `whenTouch {tile:"C"|"K"|"D"|"B"|"H"}`
+- Events (hats): `whenPlay`, `whenKey {dir}`, `whenTouch {tile:"C"|"K"|"D"|"H"}`
 - Motion: `move {dir}`
-- Actions (leaf): `collect`, `openDoor`, `push`, `win`, `say {text}`
+- Actions (leaf): `collect`, `openDoor`, `win`, `say {text}`
 - Control (body): `ifKey`, `ifCookies`
-`b2MakeBlock(type)` creates one; `B2_DEFAULT_SCRIPTS()` pre-loads a complete game (4 key→move hats + collect/key/door/push/win touch scripts). Rendered by `b2RenderScripts` / `b2RenderBlock` (recursive) / `b2RenderBodyRegion` / `b2BlockFace` (inline dropdowns/inputs).
+`b2MakeBlock(type)` creates one; `B2_DEFAULT_SCRIPTS()` returns `[]` (blank canvas). Rendered by `b2RenderScripts` / `b2RenderBlock` (recursive) / `b2RenderBodyRegion` / `b2BlockFace` (inline dropdowns/inputs).
+- NOTE: the **pushable crate/block mechanic was removed** from Badge 2 (tile `B`, the `block` paint tool, the `push` action, and `b2DoPush`). The shared `app.js` push machinery (`renderGrid` B case, `applyEvent` push, `isOpen` treating `B` as solid, `usesBlocks`, `cmd-push`) is left intact for Badge 1 and simply unused by Badge 2.
 
 **Script engine (interprets the scripts for the player):**
 - Drivers: a key press calls `b2FireKey(dir)` → runs matching `whenKey` hats. `b2RunBody`/`b2RunBlock` execute blocks; `"win"` propagates up to `b2WinGame()`.
-- `b2DoMove(dir)` is the motion primitive: walls block; **door/block tiles fire their `whenTouch` script first** (which may clear the tile via `openDoor`/`push`) then the robot enters if it became `"."`; **cookie/key/house tiles are stepped onto, then their `whenTouch` script fires** (`b2RunTouch` sets `b2ctx = {tx,ty,dx,dy}` so `collect`/`openDoor`/`push` act on the touched cell).
+- `b2DoMove(dir)` is the motion primitive: walls block; **door tiles fire their `whenTouch` script first** (which may clear the tile via `openDoor`) then the robot enters if it became `"."`; **cookie/key/house tiles are stepped onto, then their `whenTouch` script fires** (`b2RunTouch` sets `b2ctx = {tx,ty,dx,dy}` so `collect`/`openDoor` act on the touched cell).
 - `ifKey`/`ifCookies` gate their body on `b2ps.keys`/`b2ps.cookies`. Recursion guard: `b2depth` (max 300).
-- No script for a piece → the door/block stays solid, item inert (same as the old "no rule" behavior).
+- No script for a piece → the door stays solid, item inert (same as the old "no rule" behavior).
 - Player state in `b2ps` (x,y,dir,keys,cookies,totalCookies,grid). `b2PlayerStart` / `b2PlayerStop`. **`b2PlayerMove`/`b2CheckMoveInto`/`b2FireStepOnto` are gone** (replaced by the engine above); `b2Simulate` was removed even earlier.
 
 **Reusing Badge 1's drag engine for the scripts (key implementation detail):**
@@ -60,7 +61,7 @@ The user reverted an earlier keys/doors expansion of Badge 1's sandbox; **Badge 
 - `b2FindBlock` / `b2OwnArrays` are the script-tree-aware versions (they recurse into any `.body` array).
 - Cross-script bare-name access works: `badge2.js` references app.js top-level `let`/`const` (e.g. `justDragged`, `makeCommand`, `DELTA`) and `function` globals (`renderGrid`, `placeRobot`, `updateCarry`, `applyEvent`, `setMsg`, `isOpen`, `inBounds`, `wireDropzone`, `makeDragSource`, `findById`, `ownArrays`) directly.
 
-**Maze characters** (Badge 2 grids): `#` wall, `.` open, `P` robot start, `H` house/goal (mapped to `G` in the level map), `K` key, `D` door, `C` cookie, `B` pushable block (📦). Shared renderers in `app.js` (`renderGrid` draws K/D/C/B; `applyEvent` handles pickup/unlock/push; `isOpen` treats `D`/`B` as solid) — all neutral for Badge 1.
+**Maze characters** (Badge 2 grids): `#` wall, `.` open, `P` robot start, `H` house/goal (mapped to `G` in the level map), `K` key, `D` door, `C` cookie. (`B` pushable block was removed — see block model note above.) Shared renderers in `app.js` (`renderGrid` draws K/D/C; `applyEvent` handles pickup/unlock; `isOpen` treats `D` as solid) — all neutral for Badge 1; the leftover `B`/push code paths in `app.js` are only exercised by Badge 1.
 
 **Step 4 has a `<details class="b2-guide">` panel** ("how the pieces & code blocks work") explaining each maze piece and the four block categories.
 
@@ -70,6 +71,7 @@ The user reverted an earlier keys/doors expansion of Badge 1's sandbox; **Badge 
 3. Badge 2 first had the **player solve the maze by writing a Badge-1 program** (`b2Simulate`). The user changed it so **the player uses arrow keys** and the **creator codes the rules**. (`b2Simulate` removed.)
 4. The rule editor first used plain dropdown form-cards; the user found them un-Badge-1-like and the options confusing, so it was rebuilt as **full Badge-1 drag-and-drop blocks** with **simplified, concrete rule types**.
 5. **The rule editor was then refactored into a Scratch-style event-script editor** (current state): color-coded categorized palette, event "hat" blocks with nested action/control bodies, and a script-driven engine. Movement keys are now programmable (`whenKey → move`). Share bumped to `v:5` with `v:4` back-compat. This added the 2 extra app.js drag-engine hooks (findById/ownArrays). The underlying maze/collision/collect/unlock/push/win mechanics were preserved, just re-expressed as scripts.
+6. **The pushable crate/block mechanic was removed from Badge 2** across all stages (Plan peek/checklist, Build tool+guide, engine, share converter, legend). The 📦 emoji remains only as an optional *Item* skin (unrelated to the crate). Shared `app.js` push code left intact for Badge 1.
 
 ## User preferences
 - **Scope-sensitive:** keep changes tightly targeted; don't expand into unrequested areas; keep Badge 1 untouched. Confirm scope before big changes.
