@@ -1515,6 +1515,7 @@ function b2BuildFinish() {
         <input type="text" id="b2-cert-name-input" placeholder="Type your name here" />
       </div>
 
+      <hr class="b2-finish-divider" />
       <h3 style="color:var(--purple);">🎮 Play your finished game</h3>
       <p>Take a victory lap — play the game you made! (It updates from your latest work in the Build step.)</p>
       <div class="b2-embed-wrap">
