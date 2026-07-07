@@ -1545,11 +1545,11 @@ function b2BuildFinish() {
    ============================================================ */
 const B2_TABS = [
   { target: "b2-welcome",  num: "▶", label: "Start",   build: b2BuildWelcome  },
-  { target: "b2-discover", num: "1",  label: "Discover", build: b2BuildDiscover },
-  { target: "b2-explore",  num: "2",  label: "Explore",  build: b2BuildExplore  },
-  { target: "b2-plan",     num: "3",  label: "Plan",     build: b2BuildPlan     },
-  { target: "b2-build",    num: "4",  label: "Build",    build: b2BuildBuild    },
-  { target: "b2-share",    num: "5",  label: "Share",    build: b2BuildShare    },
+  { target: "b2-discover", num: "1",  label: "Discover", build: b2BuildDiscover, mins: 8  },
+  { target: "b2-explore",  num: "2",  label: "Explore",  build: b2BuildExplore,  mins: 8  },
+  { target: "b2-plan",     num: "3",  label: "Plan",     build: b2BuildPlan,     mins: 10 },
+  { target: "b2-build",    num: "4",  label: "Build",    build: b2BuildBuild,    mins: 15 },
+  { target: "b2-share",    num: "5",  label: "Share",    build: b2BuildShare,    mins: 8  },
   { target: "b2-finish",   num: "🏆", label: "Finish",   build: b2BuildFinish   },
 ];
 
@@ -2077,7 +2077,8 @@ function b2Init() {
     tab.className = "tab";
     tab.dataset.target = t.target;
     tab.dataset.badge  = "2";
-    tab.innerHTML = `<span class="tab-num">${t.num}</span> ${t.label}`;
+    tab.innerHTML = `<span class="tab-num">${t.num}</span> ${t.label}` +
+      (t.mins ? ` <span class="tab-time">~${t.mins}m</span>` : "");
     tab.addEventListener("click", () => showPanel(t.target));
     tabsNav.appendChild(tab);
 
@@ -2085,6 +2086,12 @@ function b2Init() {
     section.id        = t.target;
     section.className = "panel";
     section.innerHTML = t.build();
+    // time-box each step: show a suggested duration in its header
+    if (t.mins) {
+      const head = section.querySelector(".level-head");
+      if (head) head.insertAdjacentHTML("beforeend",
+        `<div class="b2-time-box">⏱ about ${t.mins} min</div>`);
+    }
     main.appendChild(section);
   });
 

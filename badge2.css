@@ -39,6 +39,26 @@ body.view-badge-2 .tab[data-badge="1"] { display: none; }
 }
 .tab[data-badge="2"].is-visited.is-active::after { color: #b6f5c2; }
 
+/* per-step time estimates ("time box" for Badge 2) */
+.tab[data-badge="2"] .tab-time {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #8a7ba0;
+  margin-left: 3px;
+}
+.tab[data-badge="2"].is-active .tab-time { color: #e6d3fb; }
+.b2-time-box {
+  display: inline-block;
+  margin-top: 10px;
+  background: #f3e9fc;
+  border: 1.5px solid var(--purple-light);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--purple);
+}
+
 /* ---------- Step prose & reflection ---------- */
 .b2-intro-card {
   background: #fff;
