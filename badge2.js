@@ -1199,7 +1199,7 @@ function b2BuildExplore() {
   return `
     <div class="level-head"><h2>Step 2 — Explore</h2></div>
     <div class="b2-intro-card b2-prose">
-      <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>. Here's how each one shows up in a game:</p>
+      <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>.\n\nHere's how each one shows up in a game:</p>
       <p>📋 <strong>Sequence</strong> means doing things in the right order. A game runs your steps one after another, exactly as you set them up — just like putting the robot's commands in order in Badge 1.</p>
       <p>🔁 <strong>Loops</strong> repeat things again and again. Games are full of loops: an enemy patrols back and forth, a timer counts down, and the player keeps trying until they win — just like the <em>Repeat</em> block in Badge 1.</p>
       <p>❓ <strong>Conditionals</strong> let the game make choices with <em>IF</em>. <em>IF the robot has a key, THEN the door opens. IF every cookie is collected, THEN the player wins.</em> Without conditionals, every situation would be the same — pretty boring!</p>
@@ -1738,7 +1738,7 @@ function b2CertBoardHTML() {
       const v = b2CellVisual(grid[y][x]);
       cells += `<div class="b2-cert-cell ${v.cls}">${v.txt}</div>`;
     }
-  return `<div class="b2-cert-grid" id="b2-cert-grid" data-cols="${cols}" style="grid-template-columns:repeat(${cols},${cell}px);font-size:${Math.round(cell * 0.62)}px">${cells}</div>`;
+  return `<div class="b2-cert-grid" id="b2-cert-grid" data-cols="${cols}" data-rows="${rows}" style="grid-template-columns:repeat(${cols},${cell}px);font-size:${Math.round(cell * 0.62)}px">${cells}</div>`;
 }
 /* grow the certificate maze to fill the width left over beside the facts column
    (measured once the board's column is laid out; keeps square px cells so the
@@ -1753,6 +1753,35 @@ function b2FitCertBoard() {
   const cell = Math.max(B2_CERT_CELL_MIN, Math.min(B2_CERT_CELL_MAX, Math.floor((avail - (cols - 1) - 4) / cols)));
   grid.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
   grid.style.fontSize = Math.round(cell * 0.62) + "px";
+}
+/* Size the maze so the whole certificate is as tall as `targetPx` (the page's
+   printable height), filling the space left over by the text — bounded by the
+   width beside the facts column. Longer, multi-line answers leave less room, so
+   the maze shrinks to keep everything on one page. Used only for the PDF. */
+function b2FitCertBoardToHeight(targetPx) {
+  const cert = document.getElementById("b2-cert");
+  const grid = document.getElementById("b2-cert-grid");
+  if (!cert || !grid) return;
+  const cols = +grid.dataset.cols, rows = +grid.dataset.rows || cols;
+  const wrap = grid.parentElement; // .b2-cert-board-wrap column
+  const setCell = (cell) => {
+    grid.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
+    grid.style.fontSize = Math.round(cell * 0.62) + "px";
+  };
+  setCell(B2_CERT_CELL_MIN); // measure the board column width with a small board
+  const availW = wrap ? wrap.clientWidth : 0;
+  const capW = availW ? Math.floor((availW - (cols - 1) - 4) / cols) : 200;
+  let lo = B2_CERT_CELL_MIN, hi = Math.max(B2_CERT_CELL_MIN, Math.min(200, capW));
+  const rowsCap = Math.floor((targetPx) / rows); // never taller than the target on its own
+  hi = Math.max(B2_CERT_CELL_MIN, Math.min(hi, rowsCap));
+  setCell(hi);
+  if (cert.getBoundingClientRect().height <= targetPx) return; // fits at the widest allowed
+  for (let i = 0; i < 16; i++) {
+    const mid = Math.round((lo + hi) / 2);
+    setCell(mid);
+    if (cert.getBoundingClientRect().height <= targetPx) lo = mid; else hi = mid;
+  }
+  setCell(Math.max(B2_CERT_CELL_MIN, lo));
 }
 function b2RenderCertificate() {
   const host = document.getElementById("b2-cert");
@@ -1791,13 +1820,15 @@ function b2RenderCertificate() {
 
     <div class="b2-cert-section">
       <h4>📝 What I planned & learned</h4>
-      ${answer("🏁 Goal of my game:", d.goal)}
-      ${answer("⚙️ A rule I coded:", d.rule)}
-      ${answer("🧩 Challenges I added:", d.challenges.join(" · "))}
-      ${answer("🎮 A game I explored:", d.fav)}
-      ${answer("🌍 A game-for-good that inspired me:", d.discover)}
-      ${answer("⭐ A playtester's favorite part:", d.liked)}
-      ${answer("🔧 Feedback I used to improve:", d.improve)}
+      <div class="b2-cert-answers">
+        ${answer("🏁 Goal of my game:", d.goal)}
+        ${answer("⚙️ A rule I coded:", d.rule)}
+        ${answer("🧩 Challenges I added:", d.challenges.join(" · "))}
+        ${answer("🎮 A game I explored:", d.fav)}
+        ${answer("🌍 A game-for-good that inspired me:", d.discover)}
+        ${answer("⭐ A playtester's favorite part:", d.liked)}
+        ${answer("🔧 Feedback I used to improve:", d.improve)}
+      </div>
     </div>
 
     <div class="b2-cert-skills">
@@ -1827,39 +1858,41 @@ function b2LoadScript(src) {
 }
 /* rasterize the certificate card and wrap it in a one-page PDF.
    Reads current state each call, so the maze/messages are always up to date. */
-const B2_A4_RATIO = 297 / 210; // portrait A4 height / width
+const B2_CERT_PDF_WIDTH = 877; // fixed layout width (css px) for the PDF render — smaller = bigger content
+                               // (paired with the margin below so content size stays constant)
+const B2_CERT_H2C_SCALE = 1.6; // html2canvas rasterization scale (crisp but small file)
 async function b2BuildCertPdf() {
   b2RenderCertificate(); // ensure it reflects the latest maze + answers
   const cert = document.getElementById("b2-cert");
   await b2LoadScript(B2_H2C_URL);
   await b2LoadScript(B2_JSPDF_URL);
-  // Render the card at a width chosen so its aspect ratio matches A4 — then the
-  // rasterized image fills the whole sheet (full bleed) with no distortion.
-  // Two passes: measure the natural height, solve width = height / A4-ratio, then
-  // re-measure since reflow shifts the height slightly.
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4", compress: true });
+  const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+  const margin = 32; // pt (~0.44 in) — slightly slimmer border
+  const availW = pw - margin * 2, availH = ph - margin * 2;
+  // Render the card at a FIXED width so text/icons come out a consistent, large
+  // size, and size the maze to fill the vertical space that's left. Longer,
+  // multi-line answers use more room, so the maze shrinks to keep it on one page.
   const prevWidth = cert.style.width;
-  const solveWidth = () => {
-    const h = cert.getBoundingClientRect().height;
-    cert.style.width = Math.round(h / B2_A4_RATIO) + "px";
-    b2FitCertBoard();
-  };
-  cert.style.width = "900px"; b2FitCertBoard();
-  solveWidth(); solveWidth();
-  // scale ~1.6 is crisp enough for a certificate while keeping the file small
-  // (email attachments must stay well under a couple MB); JPEG + PDF stream
-  // compression shrink it much further than PNG.
+  const scale = availW / B2_CERT_PDF_WIDTH; // css px -> pt when drawn at full printable width
+  const targetPx = availH / scale;          // printable page height, in css px
+  cert.style.width = B2_CERT_PDF_WIDTH + "px";
+  b2FitCertBoardToHeight(targetPx);
   let canvas;
   try {
-    canvas = await window.html2canvas(cert, { scale: 1.6, backgroundColor: "#ffffff", useCORS: true });
+    canvas = await window.html2canvas(cert, { scale: B2_CERT_H2C_SCALE, backgroundColor: "#ffffff", useCORS: true });
   } finally {
     cert.style.width = prevWidth; // restore the responsive on-screen preview
     b2FitCertBoard();
   }
   const img = canvas.toDataURL("image/jpeg", 0.9);
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4", compress: true });
-  const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
-  pdf.addImage(img, "JPEG", 0, 0, pw, ph); // full-bleed: the certificate covers the whole page
+  const cardHpx = canvas.height / B2_CERT_H2C_SCALE; // rendered card height in css px
+  let drawW = availW, drawH = cardHpx * scale;
+  if (drawH > availH) { // extremely long content: scale the whole card down to fit one page
+    const r = availH / drawH; drawW *= r; drawH = availH;
+  }
+  pdf.addImage(img, "JPEG", (pw - drawW) / 2, margin + (availH - drawH) / 2, drawW, drawH);
   return { blob: pdf.output("blob"), base64: pdf.output("datauristring").split(",")[1] };
 }
 function b2CertFileName() {
