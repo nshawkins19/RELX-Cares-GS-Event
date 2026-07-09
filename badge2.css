@@ -233,6 +233,45 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 .b2-plan-peek-body h4 { margin: 6px 0 10px; color: var(--purple); font-size: 1rem; }
 .b2-plan-peek-note { font-size: 0.8rem; color: #6b5d7d; margin: 10px 0 0; }
 
+/* ---- Simple peek: single column with clearly separated numbered steps ---- */
+.b2-plan-peek-simple { display: block; }
+.b2-plan-sep { border: 0; border-top: 2px solid #c9b6e6; margin: 14px 0; }
+.b2-plan-steps-intro { margin: 12px 0 10px; font-weight: 600; }
+.b2-plan-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: b2-step;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.b2-plan-steps li {
+  counter-increment: b2-step;
+  position: relative;
+  padding: 12px 14px 12px 46px;
+  background: #fff;
+  border: 2px solid #d9c8ec;
+  border-radius: 12px;
+  line-height: 1.4;
+}
+.b2-plan-steps li::before {
+  content: counter(b2-step);
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ---- Maze pieces: emoji tile + name/desc, with a clear "Looks:" chip row ---- */
 .b2-plan-piece-list { list-style: none; margin: 0; padding: 0; }
 .b2-peek-piece {

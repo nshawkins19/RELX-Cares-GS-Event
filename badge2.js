@@ -1269,29 +1269,26 @@ function b2BuildPlan() {
   return `
     <div class="level-head"><h2>Step 3 — Plan</h2></div>
     <div class="b2-intro-card b2-prose">
-      <p>Game makers <strong>plan</strong> before they build. That's part of the <em>game design process</em>: plan → build → test → improve → share. Use the reference below, then fill in your plan — you'll use it in the next step!</p>
+      <p>Before you build, take a minute to <strong>plan</strong> — real game designers always do! Just jot down your ideas below. You'll use them in the next step.</p>
 
-      <p>Here's what you're making: a maze that a robot (or whatever character you pick) explores one step at a time.</p>
-      <ul class="b2-plan-summary">
-        <li>You draw the maze and decide what's in it — items to grab, keys, and locked doors.</li>
-        <li>You write simple snap-together rules, like <em>WHEN the robot touches the cookie → pick it up</em>, that decide what each piece does.</li>
-        <li>Then you hand your device to another Girl Scout, who <strong>playtests</strong> your game with just the arrow keys — no coding needed to play.</li>
-        <li>You use her feedback to <strong>improve</strong> your maze, and test again — that's <em>iteration</em>! Keep going until it's just right.</li>
-      </ul>
+      <details class="b2-guide b2-plan-peek">
+        <summary>👀 Peek at what you'll build — tap to open</summary>
+        <div class="b2-plan-peek-body b2-plan-peek-simple">
+          <p>You're going to make a <strong>maze game</strong>: a player moves through a maze to reach a goal, and a friend plays it using just the arrow keys.</p>
+          <hr class="b2-plan-sep">
+          <p class="b2-plan-steps-intro">In the next step, here's what you'll do:</p>
+          <ol class="b2-plan-steps">
+            <li>🧱 Draw the walls, then add 🍪 items, 🔑 keys, and 🚪 doors.</li>
+            <li>🎨 Pick your own emoji for the player, item, and goal.</li>
+            <li>🧩 Snap blocks together to make rules — like <em>when the robot touches 🍪 → pick it up</em>.</li>
+          </ol>
+        </div>
+      </details>
 
-      <details class="b2-guide b2-plan-peek" open>
-        <summary>🗺️ What you'll be able to build — tap to expand/collapse</summary>
-        <div class="b2-plan-peek-body">
-          <div class="b2-plan-peek-col">
-            <h4>Maze pieces</h4>
-            <ul class="b2-plan-piece-list">${b2PlanPeekPiecesHTML()}</ul>
-            <p class="b2-plan-peek-note">You can also pick different emoji for the player, item, and goal to match your game's theme (ocean, garden, space, and more).</p>
-          </div>
-          <div class="b2-plan-peek-col">
-            <h4>Code blocks</h4>
-            <div class="b2-peek-groups">${b2PlanPeekBlocksHTML()}</div>
-            <p class="b2-plan-peek-note">Blocks snap together like puzzle pieces. You'll drag them in the next step.</p>
-          </div>
+      <details class="b2-guide b2-plan-peek">
+        <summary>🤔 How is this different from Badge 1? — tap to open</summary>
+        <div class="b2-plan-peek-body b2-plan-peek-simple">
+          <p>In Badge 1 you programmed the robot's <em>moves</em> — telling it exactly what to do, step by step (move forward → turn right → …), to get through the maze. This time <em>you're the game designer</em>: instead of the moves, you program the <em>rules and controls</em> — what the pieces do and what happens as someone plays — so a player can explore your maze with the arrow keys.</p>
         </div>
       </details>
 
