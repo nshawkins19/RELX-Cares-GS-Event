@@ -842,6 +842,10 @@ body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
   line-height: 1.4;
 }
 .b2-guide-ico { font-size: 1.15rem; flex: 0 0 auto; width: 1.4em; text-align: center; }
+/* full-width notes below both guide columns, left-aligned to the columns above */
+.b2-guide-foot { padding: 0 4px 14px; text-align: left; }
+.b2-guide-foot p { margin: 0 0 8px; font-size: 0.9rem; }
+.b2-guide-foot p:last-child { margin-bottom: 0; font-size: 0.85rem; color: #6b5d7d; }
 @media (max-width: 640px) {
   .b2-guide-body { grid-template-columns: 1fr; }
 }

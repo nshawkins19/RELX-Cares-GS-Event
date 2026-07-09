@@ -1339,7 +1339,7 @@ function b2BuildBuild() {
         <div class="b2-guide-col">
           <h4>🧩 Maze pieces</h4>
           <ul>
-            <li><span class="b2-guide-ico">🤖</span><div><b>Robot</b> — the player. Moves with the arrow keys.</div></li>
+            <li><span class="b2-guide-ico">🤖</span><div><b>Player</b> — moves with the arrow keys or the on-screen arrow pad.</div></li>
             <li><span class="b2-guide-ico">🏠</span><div><b>House</b> — the goal. A <b>when robot touches 🏠</b> script decides when reaching it wins.</div></li>
             <li><span class="b2-guide-ico">🍪</span><div><b>Cookie</b> — a <b>when robot touches 🍪 → pick it up</b> script collects it.</div></li>
             <li><span class="b2-guide-ico">🔑</span><div><b>Key</b> — collect it so the robot can open doors.</div></li>
@@ -1349,15 +1349,17 @@ function b2BuildBuild() {
         </div>
         <div class="b2-guide-col">
           <h4>🧩 How code blocks work</h4>
-          <p style="font-size:0.9rem; margin:0 0 8px;">Snap blocks under an <b>event</b> "hat" — when the event happens, the blocks underneath run in order:</p>
           <ul>
-            <li><span class="b2-guide-ico">🟡</span><div><b>Events</b> — <i>when ▶ Play clicked</i>, <i>when an arrow is pressed</i> (keyboard or the arrow pad), <i>when the robot touches</i> a piece.</div></li>
+            <li><span class="b2-guide-ico">🟡</span><div><b>Events</b> — <i>when an arrow is pressed</i> (keyboard or the arrow pad), <i>when the robot touches</i> a piece.</div></li>
             <li><span class="b2-guide-ico">🔵</span><div><b>Motion</b> — <i>move up / down / left / right</i>.</div></li>
             <li><span class="b2-guide-ico">🟣</span><div><b>Actions</b> — <i>pick it up</i>, <i>open the door</i>, <i>win the game</i>, <i>show message</i>.</div></li>
             <li><span class="b2-guide-ico">🟠</span><div><b>Control</b> — <i>if carrying a key</i>, <i>if all cookies collected</i> — put blocks inside to run them only when it's true.</div></li>
           </ul>
-          <p style="font-size:0.85rem; color:#6b5d7d; margin-top:6px;">Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door stays solid like a wall. Remove a block with the eraser.</p>
         </div>
+      </div>
+      <div class="b2-guide-foot">
+        <p>Snap blocks under an <b>event</b> "hat" — when the event happens, the blocks underneath run in order.</p>
+        <p>Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door stays solid like a wall. Remove a block with the eraser.</p>
       </div>
     </details>
 
