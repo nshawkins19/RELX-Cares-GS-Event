@@ -1204,7 +1204,6 @@ function b2BuildExplore() {
       <p style="margin-top:16px;">📋 <strong>Sequence</strong> means doing things in the right order. A game runs your steps one after another, exactly as you set them up — just like putting the robot's commands in order in Badge 1.</p>
       <p>🔁 <strong>Loops</strong> repeat things again and again. Games are full of loops: an enemy patrols back and forth, a timer counts down, and the player keeps trying until they win — just like the <em>Repeat</em> block in Badge 1.</p>
       <p>❓ <strong>Conditionals</strong> let the game make choices with <em>IF</em>. <em>IF the robot has a key, THEN the door opens. IF every cookie is collected, THEN the player wins.</em> Without conditionals, every situation would be the same — pretty boring!</p>
-      <div class="b2-callout">You'll build your game with these same three ideas from Badge 1 — <strong>sequence, loops, and conditionals</strong> — by snapping blocks together. Then a friend uses the <strong>arrow keys</strong> to play. That's exactly how real game design works!</div>
       <div class="b2-reflect">
         <label for="b2-r-game">✏️ What is your favorite video game?</label>
         <textarea id="b2-r-game" rows="1" placeholder="My favorite game is…"></textarea>
@@ -1372,7 +1371,7 @@ function b2BuildBuild() {
         <h3>Game settings</h3>
         <div class="b2-form b2-settings-grid">
           <div class="field"><label for="b2-title">Title</label><input type="text" id="b2-title" placeholder="${B2_DEFAULTS.title}" /></div>
-          <div class="field"><label for="b2-intro">Start message</label><textarea id="b2-intro" rows="2" placeholder="${B2_DEFAULTS.intro}"></textarea></div>
+          <div class="field"><label for="b2-intro">Instructions</label><textarea id="b2-intro" rows="2" placeholder="${B2_DEFAULTS.intro}"></textarea></div>
           <div class="field"><label for="b2-win">Win message</label><textarea id="b2-win" rows="2" placeholder="${B2_DEFAULTS.win}"></textarea></div>
         </div>
       </div>
@@ -1404,7 +1403,6 @@ function b2BuildBuild() {
           <button class="btn btn-run" id="b2-play">▶ Play</button>
           <button class="btn" id="b2-stop" disabled>⏹ Stop</button>
         </div>
-        <div class="run-msg info" id="msg-b2">Draw a maze, set your rules, then press ▶ Play!</div>
         <div class="b2-dpad-wrap">
           <div class="b2-dpad" id="b2-dpad" hidden tabindex="0">
             <button class="dpad-btn dpad-up"    data-b2dir="0,-1">▲</button>
@@ -1855,7 +1853,7 @@ function b2RenderCertificate() {
       </div>
     </div>
     <div class="b2-cert-msgs">
-      <p><b>Start message:</b> ${b2Esc(d.intro)}</p>
+      <p><b>Instructions:</b> ${b2Esc(d.intro)}</p>
       <p><b>Win message:</b> ${b2Esc(d.win)}</p>
     </div>
 
