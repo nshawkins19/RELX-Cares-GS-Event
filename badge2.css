@@ -278,11 +278,13 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 .b2-peek-skins-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #8a7ba0; }
 .b2-peek-skin {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 1.9em; height: 1.9em;
-  font-size: 1rem;
+  width: 2em; height: 2em;
+  font-size: 1.3rem;
   background: #fff;
   border: 1.5px solid #e7d9f4;
   border-radius: 8px;
+  cursor: default;      /* plain arrow, not a text I-beam, on hover */
+  user-select: none;
 }
 
 /* ---- Code blocks: color-coded category cards with one chip per real block ---- */
@@ -506,15 +508,15 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   }
 }
 
-/* Badge 2: the player stays a 🤖 while the game runs (Badge 1 keeps its arrow).
-   Replace the rotating blue arrow with the robot emoji and don't rotate it. */
+/* Badge 2: the player icon stays put while the game runs (Badge 1 keeps its
+   arrow). Replace the rotating blue arrow with the player emoji, don't rotate. */
 #grid-b2 .robot .body {
   background: none;
   box-shadow: none;
   transform: none !important;
 }
 #grid-b2 .robot .body::after {
-  content: var(--b2-player, "\1F916"); /* themed player icon (defaults to 🤖) */
+  content: var(--b2-player, "\1F467"); /* themed player icon (defaults to 👧) */
   color: initial;
   font-size: calc(var(--cell) * 0.7);
   line-height: 1;
