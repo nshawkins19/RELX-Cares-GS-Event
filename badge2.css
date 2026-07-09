@@ -119,6 +119,10 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 .b2-saved-note { font-size: 0.78rem; color: #8a7ba0; margin-top: 6px; }
 /* small "Example: …" hint under a reflection question */
 .b2-eg { font-size: 0.84rem; font-style: italic; color: #7a6b90; margin: 0 0 6px; }
+/* brief concept definitions between the Explore intro and the examples pod:
+   indented a little, with breathing room above and below */
+.b2-defs { margin: 12px 0 14px; padding-left: 20px; }
+.b2-defs p { margin: 5px 0; }
 
 /* "games for good" example cards — reuse Badge 1's .pioneer card look,
    with a green "for good" accent and a clickable source link */

@@ -1200,10 +1200,20 @@ function b2BuildExplore() {
   return `
     <div class="level-head"><h2>Step 2 — Explore</h2></div>
     <div class="b2-intro-card b2-prose">
-      <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>. Here's how each one shows up in a game:</p>
-      <p style="margin-top:16px;">📋 <strong>Sequence</strong> means doing things in the right order. A game runs your steps one after another, exactly as you set them up — just like putting the robot's commands in order in Badge 1.</p>
-      <p>🔁 <strong>Loops</strong> repeat things again and again. Games are full of loops: an enemy patrols back and forth, a timer counts down, and the player keeps trying until they win — just like the <em>Repeat</em> block in Badge 1.</p>
-      <p>❓ <strong>Conditionals</strong> let the game make choices with <em>IF</em>. <em>IF the robot has a key, THEN the door opens. IF every cookie is collected, THEN the player wins.</em> Without conditionals, every situation would be the same — pretty boring!</p>
+      <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>.</p>
+      <div class="b2-defs">
+        <p>📋 <strong>Sequence</strong> — doing things in the right order.</p>
+        <p>🔁 <strong>Loops</strong> — repeating something again and again.</p>
+        <p>❓ <strong>Conditionals</strong> — making choices with <em>IF</em>.</p>
+      </div>
+      <details class="b2-guide b2-plan-peek">
+        <summary>📖 See how each one shows up in a game — tap to open</summary>
+        <div class="b2-plan-peek-body b2-plan-peek-simple">
+          <p>📋 <strong>Sequence:</strong> the game does your steps in order, one after another — just like the robot's commands in Badge 1.</p>
+          <p>🔁 <strong>Loops:</strong> the game repeats things — a ghost paces back and forth, a timer counts down — just like the <em>Repeat</em> block in Badge 1.</p>
+          <p>❓ <strong>Conditionals:</strong> the game makes a choice with <em>IF</em> — like <em>IF the player has a key, THEN a door can open</em>.</p>
+        </div>
+      </details>
       <div class="b2-reflect">
         <label for="b2-r-game">✏️ What is your favorite video game?</label>
         <textarea id="b2-r-game" rows="1" placeholder="My favorite game is…"></textarea>
