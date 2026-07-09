@@ -736,6 +736,9 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   display: block;
 }
 .b2-embed-frame[hidden] { display: none; }
+/* the Finish-stage "play your finished game" embed gets a taller frame so the
+   maze renders bigger for the celebratory play-through */
+#b2-finish-frame { height: 760px; }
 .b2-embed-empty {
   background: #fffaf0;
   border: 2px dashed var(--yellow-deep);
