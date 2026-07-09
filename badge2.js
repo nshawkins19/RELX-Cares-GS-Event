@@ -158,7 +158,7 @@ const TOUCH_TILES = [
 
 /* palette is grouped into Scratch-like color-coded categories */
 const B2_CATEGORIES = [
-  { cls: "cat-events",  label: "Events",  hint: "when something happens", blocks: ["whenPlay", "whenKey", "whenTouch"] },
+  { cls: "cat-events",  label: "Events",  hint: "when something happens", blocks: ["whenKey", "whenTouch"] },
   { cls: "cat-motion",  label: "Motion",  hint: "move the robot",         blocks: ["move"] },
   { cls: "cat-actions", label: "Actions", hint: "make something happen",  blocks: ["collect", "openDoor", "win", "say"] },
   { cls: "cat-control", label: "Control", hint: "only run if it's true",  blocks: ["ifKey", "ifCookies"] },
@@ -1255,7 +1255,7 @@ function b2PlanPeekBlocksHTML() {
       <div class="b2-peek-group-head">${dot} ${label}</div>
       <div class="b2-peek-chips">${chips.map((c) => `<span class="b2-peek-chip">${c}</span>`).join("")}</div>
     </div>`;
-  const events  = ["when ▶ Play clicked", `when arrow pressed ${dirArrows}`, `when robot touches ${touchIcons}`];
+  const events  = [`when arrow pressed ${dirArrows}`, `when robot touches ${touchIcons}`];
   const motion  = DIR_LIST.map((d) => `move ${DIR_LABEL[d]}`);
   const actions = B2_CATEGORIES.find((c) => c.cls === "cat-actions").blocks.map((t) => BLOCK_DEFS[t].label);
   const control = B2_CATEGORIES.find((c) => c.cls === "cat-control").blocks.map((t) => b2PaletteLabel(t));
