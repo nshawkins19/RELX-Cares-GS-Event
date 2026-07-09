@@ -105,8 +105,8 @@ const B2_MAX_CELL = 84;
    mechanics are identical no matter which emoji is chosen. */
 const B2_SKINS = {
   P: { label: "Player", options: ["👧", "🤿", "👩‍🌾", "🧑‍🚀", "🧑‍⚕️", "🧑‍🚒", "🐶"] },
-  C: { label: "Item",   options: ["🍪", "🥫", "🥕", "🦴", "💊", "💧", "⭐"] },
-  H: { label: "Goal",   options: ["🏘️", "♻️", "🧺", "🏠", "🛰️", "🏥", "🔥"] },
+  C: { label: "Item",   options: ["🍪", "🥫", "🥕", "⭐", "💊", "💧", "🦴"] },
+  H: { label: "Goal",   options: ["🏘️", "♻️", "🧺", "🛰️", "🏥", "🔥", "🏠"] },
 };
 const B2_DEFAULT_SKIN = { P: "👧", C: "🍪", H: "🏘️" };
 /* only ever accept icons from the allowed lists (also guards shared links) */
@@ -416,9 +416,14 @@ function b2TouchTileOpts() {
 }
 /* fill the icon-picker dropdowns and keep them in sync with B2.skin */
 const B2_SKIN_NAMES = {
-  "👧": "Girl Scout", "🤿": "Diver", "👩‍🌾": "Farmer", "🧑‍🚀": "Astronaut", "🧑‍⚕️": "Doctor", "🧑‍🚒": "Firefighter", "🐶": "Puppy",
-  "🏘️": "Neighborhood", "♻️": "Recycle", "🧺": "Basket", "🏠": "Animal shelter", "🛰️": "Satellite", "🏥": "Hospital", "🔥": "Fire",
-  "🍪": "Cookie", "🥫": "Garbage", "🥕": "Carrot", "🦴": "Bone", "💊": "Pill", "💧": "Water drop", "⭐": "Star",
+  // ordered by theme (player, item, goal) — the single source of skin order
+  "👧": "Girl Scout",  "🍪": "Cookie",     "🏘️": "Neighborhood",    // Girl Scout
+  "🤿": "Diver",       "🥫": "Garbage",    "♻️": "Recycle",          // Ocean
+  "👩‍🌾": "Farmer",      "🥕": "Carrot",     "🧺": "Basket",           // Farmer
+  "🧑‍🚀": "Astronaut",  "⭐": "Star",       "🛰️": "Satellite",       // Astronaut
+  "🧑‍⚕️": "Doctor",     "💊": "Pill",       "🏥": "Hospital",         // Doctor
+  "🧑‍🚒": "Firefighter","💧": "Water drop", "🔥": "Fire",             // Firefighter
+  "🐶": "Puppy",       "🦴": "Bone",       "🏠": "Animal shelter",   // Dog
 };
 /* a role's icon options, always ordered to match the B2_SKIN_NAMES list so the
    picker and the Plan-step pod show them in the same, single source of order */
