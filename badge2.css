@@ -496,7 +496,8 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 }
 /* compact paint/size buttons inside the "Your game" stage pod so they don't
    crowd the maze — leaves more room for a bigger board */
-#b2-build .b2-game-box .maze-tool {
+#b2-build .b2-game-box .maze-tool,
+#b2-build .b2-scripts-head .maze-tool {
   font-size: 0.78rem;
   padding: 4px 8px;
   border-radius: 8px;
@@ -514,8 +515,9 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
    Placed after the compact base rules so it wins at equal specificity. */
 @media (min-width: 1200px) {
   #b2-build .b2-game-box .maze-tool,
+  #b2-build .b2-scripts-head .maze-tool,
   #b2-build .b2-game-box .maze-size .cond-select {
-    font-size: 1.2rem;
+    font-size: 0.95rem;
     padding: 4px 7px;
   }
 }
@@ -612,6 +614,7 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   margin-bottom: 8px;
   justify-content: space-between;
   background: var(--cat);
+  padding: 8px 12px; /* tighter vertical padding than the shared .cmd-btn (11px) */
 }
 .cmd-btn.b2-pal:last-child { margin-bottom: 0; }
 .b2-pal-text { display: inline-flex; align-items: center; gap: 6px; }
