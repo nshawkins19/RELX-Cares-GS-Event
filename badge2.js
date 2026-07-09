@@ -474,7 +474,7 @@ function b2FitGrid() {
     const above = wrap.getBoundingClientRect().top - podR.top;
     const below = document.body.classList.contains("b2-embed")
       ? podR.bottom - wrap.getBoundingClientRect().bottom + 6
-      : 110;
+      : 70;
     hBudget = window.innerHeight - headH - above - below;
   }
   const hCell = Math.floor((hBudget - (B2.model.rows + 1) * gap) / B2.model.rows);

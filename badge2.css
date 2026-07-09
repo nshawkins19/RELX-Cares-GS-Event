@@ -385,8 +385,14 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   margin-top: 18px;
 }
 #b2-settings    { flex: 1 1 100%; order: 0; }
-.b2-scripts-box { order: 1; flex: 3 1 320px; min-width: 0; container-type: inline-size; } /* palette + scripts; query container so the palette can stack based on the pod's real width */
-.b2-game-box    { order: 2; flex: 2 1 280px; min-width: 0; } /* the "stage" */
+.b2-scripts-box { order: 1; flex: 1 1 320px; min-width: 0; container-type: inline-size; } /* palette + scripts; query container so the palette can stack based on the pod's real width */
+.b2-game-box    { order: 2; flex: 1 1 320px; min-width: 0; } /* the "stage" — equal width to the scripts pod */
+/* Below this width the two pods stack instead of sitting side by side. Stacked,
+   the maze ("Your game") sits on top and the code blocks below it. */
+@media (max-width: 1080px) {
+  .b2-game-box    { order: 1; flex-basis: 100%; }
+  .b2-scripts-box { order: 2; flex-basis: 100%; }
+}
 /* Large screens: let the build workspace break out past the 1080px page cap so
    the maze "stage" can grow. Centered via negative inline margins relative to
    <main>. The "How it all works" guide matches that width; the header/quickstart
@@ -402,6 +408,18 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 #b2-build .box { padding: 26px; }
 /* keep the game pod clear of the sticky tab bar when scrolled to */
 .b2-game-box { scroll-margin-top: 84px; }
+/* On the side-by-side layout, pin the "Your game" pod (maze + controls) so it
+   stays in view while the taller Code Blocks pod scrolls past. It parks just
+   below the sticky tab bar with a little breathing room above. Only kicks in
+   when the two pods sit side by side — when they stack on narrower screens the
+   game pod is the last item, so pinning it would do nothing anyway. */
+@media (min-width: 1081px) {
+  .b2-game-box {
+    position: sticky;
+    top: 78px;
+    align-self: flex-start;
+  }
+}
 
 /* ---- Narrow portrait phones: side-by-side has no room to shrink into
    usefully, so ask for landscape instead (same idea as mobile games) —
