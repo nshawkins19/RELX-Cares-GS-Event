@@ -39,26 +39,6 @@ body.view-badge-2 .tab[data-badge="1"] { display: none; }
 }
 .tab[data-badge="2"].is-visited.is-active::after { color: #b6f5c2; }
 
-/* per-step time estimates ("time box" for Badge 2) */
-.tab[data-badge="2"] .tab-time {
-  font-weight: 700;
-  font-size: 0.75rem;
-  color: #8a7ba0;
-  margin-left: 3px;
-}
-.tab[data-badge="2"].is-active .tab-time { color: #e6d3fb; }
-.b2-time-box {
-  display: inline-block;
-  margin-top: 10px;
-  background: #f3e9fc;
-  border: 1.5px solid var(--purple-light);
-  border-radius: 999px;
-  padding: 4px 14px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--purple);
-}
-
 /* ---------- Step prose & reflection ---------- */
 .b2-intro-card {
   background: #fff;
@@ -119,6 +99,10 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 .b2-saved-note { font-size: 0.78rem; color: #8a7ba0; margin-top: 6px; }
 /* small "Example: …" hint under a reflection question */
 .b2-eg { font-size: 0.84rem; font-style: italic; color: #7a6b90; margin: 0 0 6px; }
+/* brief concept definitions between the Explore intro and the examples pod:
+   indented a little, with breathing room above and below */
+.b2-defs { margin: 12px 0 14px; padding-left: 20px; }
+.b2-defs p { margin: 5px 0; }
 
 /* "games for good" example cards — reuse Badge 1's .pioneer card look,
    with a green "for good" accent and a clickable source link */
@@ -233,6 +217,45 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 .b2-plan-peek-body h4 { margin: 6px 0 10px; color: var(--purple); font-size: 1rem; }
 .b2-plan-peek-note { font-size: 0.8rem; color: #6b5d7d; margin: 10px 0 0; }
 
+/* ---- Simple peek: single column with clearly separated numbered steps ---- */
+.b2-plan-peek-simple { display: block; }
+.b2-plan-sep { border: 0; border-top: 2px solid #c9b6e6; margin: 14px 0; }
+.b2-plan-steps-intro { margin: 12px 0 10px; font-weight: 600; }
+.b2-plan-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: b2-step;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.b2-plan-steps li {
+  counter-increment: b2-step;
+  position: relative;
+  padding: 12px 14px 12px 46px;
+  background: #fff;
+  border: 2px solid #d9c8ec;
+  border-radius: 12px;
+  line-height: 1.4;
+}
+.b2-plan-steps li::before {
+  content: counter(b2-step);
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ---- Maze pieces: emoji tile + name/desc, with a clear "Looks:" chip row ---- */
 .b2-plan-piece-list { list-style: none; margin: 0; padding: 0; }
 .b2-peek-piece {
@@ -255,11 +278,13 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 .b2-peek-skins-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #8a7ba0; }
 .b2-peek-skin {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 1.9em; height: 1.9em;
-  font-size: 1rem;
+  width: 2em; height: 2em;
+  font-size: 1.3rem;
   background: #fff;
   border: 1.5px solid #e7d9f4;
   border-radius: 8px;
+  cursor: default;      /* plain arrow, not a text I-beam, on hover */
+  user-select: none;
 }
 
 /* ---- Code blocks: color-coded category cards with one chip per real block ---- */
@@ -346,8 +371,14 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   margin-top: 18px;
 }
 #b2-settings    { flex: 1 1 100%; order: 0; }
-.b2-scripts-box { order: 1; flex: 3 1 320px; min-width: 0; container-type: inline-size; } /* palette + scripts; query container so the palette can stack based on the pod's real width */
-.b2-game-box    { order: 2; flex: 2 1 280px; min-width: 0; } /* the "stage" */
+.b2-scripts-box { order: 1; flex: 1 1 320px; min-width: 0; container-type: inline-size; } /* palette + scripts; query container so the palette can stack based on the pod's real width */
+.b2-game-box    { order: 2; flex: 1 1 320px; min-width: 0; } /* the "stage" — equal width to the scripts pod */
+/* Below this width the two pods stack instead of sitting side by side. Stacked,
+   the maze ("Your game") sits on top and the code blocks below it. */
+@media (max-width: 1080px) {
+  .b2-game-box    { order: 1; flex-basis: 100%; }
+  .b2-scripts-box { order: 2; flex-basis: 100%; }
+}
 /* Large screens: let the build workspace break out past the 1080px page cap so
    the maze "stage" can grow. Centered via negative inline margins relative to
    <main>. The "How it all works" guide matches that width; the header/quickstart
@@ -363,6 +394,18 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 #b2-build .box { padding: 26px; }
 /* keep the game pod clear of the sticky tab bar when scrolled to */
 .b2-game-box { scroll-margin-top: 84px; }
+/* On the side-by-side layout, pin the "Your game" pod (maze + controls) so it
+   stays in view while the taller Code Blocks pod scrolls past. It parks just
+   below the sticky tab bar with a little breathing room above. Only kicks in
+   when the two pods sit side by side — when they stack on narrower screens the
+   game pod is the last item, so pinning it would do nothing anyway. */
+@media (min-width: 1081px) {
+  .b2-game-box {
+    position: sticky;
+    top: 78px;
+    align-self: flex-start;
+  }
+}
 
 /* ---- Narrow portrait phones: side-by-side has no room to shrink into
    usefully, so ask for landscape instead (same idea as mobile games) —
@@ -439,7 +482,8 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
 }
 /* compact paint/size buttons inside the "Your game" stage pod so they don't
    crowd the maze — leaves more room for a bigger board */
-#b2-build .b2-game-box .maze-tool {
+#b2-build .b2-game-box .maze-tool,
+#b2-build .b2-scripts-head .maze-tool {
   font-size: 0.78rem;
   padding: 4px 8px;
   border-radius: 8px;
@@ -457,21 +501,22 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
    Placed after the compact base rules so it wins at equal specificity. */
 @media (min-width: 1200px) {
   #b2-build .b2-game-box .maze-tool,
+  #b2-build .b2-scripts-head .maze-tool,
   #b2-build .b2-game-box .maze-size .cond-select {
-    font-size: 1.2rem;
+    font-size: 0.95rem;
     padding: 4px 7px;
   }
 }
 
-/* Badge 2: the player stays a 🤖 while the game runs (Badge 1 keeps its arrow).
-   Replace the rotating blue arrow with the robot emoji and don't rotate it. */
+/* Badge 2: the player icon stays put while the game runs (Badge 1 keeps its
+   arrow). Replace the rotating blue arrow with the player emoji, don't rotate. */
 #grid-b2 .robot .body {
   background: none;
   box-shadow: none;
   transform: none !important;
 }
 #grid-b2 .robot .body::after {
-  content: var(--b2-player, "\1F916"); /* themed player icon (defaults to 🤖) */
+  content: var(--b2-player, "\1F467"); /* themed player icon (defaults to 👧) */
   color: initial;
   font-size: calc(var(--cell) * 0.7);
   line-height: 1;
@@ -555,6 +600,7 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   margin-bottom: 8px;
   justify-content: space-between;
   background: var(--cat);
+  padding: 8px 12px; /* tighter vertical padding than the shared .cmd-btn (11px) */
 }
 .cmd-btn.b2-pal:last-child { margin-bottom: 0; }
 .b2-pal-text { display: inline-flex; align-items: center; gap: 6px; }
@@ -579,6 +625,19 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   border-radius: 11px;
 }
 .b2-block > .block-head { font-weight: 800; color: #3a2c4a; font-size: 0.95rem; }
+/* Purple round ✕ on blocks that have a body (Events/Control), matching the
+   ✕ that the simple Motion/Actions chips already get from .cmd-chip .remove */
+.b2-block .block-head .remove {
+  border: none;
+  background: #e7d2f0;
+  color: var(--purple);
+  border-radius: 50%;
+  width: 22px; height: 22px;
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 1;
+}
+.b2-block .block-head .remove:hover { background: #f3c2c2; color: #b32d2d; }
 .b2-block.b2-hat {
   border-top-left-radius: 18px;
   border-top-right-radius: 18px;
@@ -679,6 +738,9 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   display: block;
 }
 .b2-embed-frame[hidden] { display: none; }
+/* the Finish-stage "play your finished game" embed gets a taller frame so the
+   maze renders bigger for the celebratory play-through */
+#b2-finish-frame { height: 760px; }
 .b2-embed-empty {
   background: #fffaf0;
   border: 2px dashed var(--yellow-deep);
@@ -782,6 +844,10 @@ body.b2-embed #b2-build .box { padding: 10px; box-shadow: none; margin: 0; }
   line-height: 1.4;
 }
 .b2-guide-ico { font-size: 1.15rem; flex: 0 0 auto; width: 1.4em; text-align: center; }
+/* full-width notes below both guide columns, left-aligned to the columns above */
+.b2-guide-foot { padding: 0 4px 14px; text-align: left; }
+.b2-guide-foot p { margin: 0 0 8px; font-size: 0.9rem; }
+.b2-guide-foot p:last-child { margin-bottom: 0; font-size: 0.85rem; color: #6b5d7d; }
 @media (max-width: 640px) {
   .b2-guide-body { grid-template-columns: 1fr; }
 }

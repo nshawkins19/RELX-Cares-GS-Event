@@ -88,8 +88,8 @@ const B2_TOOLS = [
   { key: "cookie", label: "🍪 Cookie" },
   { key: "key",    label: "🔑 Key" },
   { key: "door",   label: "🚪 Door" },
-  { key: "robot",  label: "🤖 Robot start" },
-  { key: "house",  label: "🏠 House" },
+  { key: "robot",  label: "👧 Player start" },
+  { key: "house",  label: "🏘️ Goal" },
 ];
 const B2_SIZES = [7, 9, 11, 13, 15];
 const B2_DEFAULT_SIZE = 9;
@@ -104,11 +104,11 @@ const B2_MAX_CELL = 84;
    no theme picker; the kid just chooses each icon from a list. The game's
    mechanics are identical no matter which emoji is chosen. */
 const B2_SKINS = {
-  P: { label: "Player", options: ["🤖", "🤿", "👩‍🌾", "🧑‍🚀", "🧑‍⚕️", "🧑‍🚒"] },
-  C: { label: "Item",   options: ["🍪", "🥫", "🥕", "🐶", "💊"] },
-  H: { label: "Goal",   options: ["🏠", "♻️", "🧺", "🐾", "🛰️", "🏥"] },
+  P: { label: "Player", options: ["👧", "🤿", "👩‍🌾", "🧑‍🚀", "🧑‍⚕️", "🧑‍🚒", "🐶"] },
+  C: { label: "Item",   options: ["🍪", "🥫", "🥕", "⭐", "💊", "💧", "🦴"] },
+  H: { label: "Goal",   options: ["🏘️", "♻️", "🧺", "🛰️", "🏥", "🔥", "🏠"] },
 };
-const B2_DEFAULT_SKIN = { P: "🤖", C: "🍪", H: "🏠" };
+const B2_DEFAULT_SKIN = { P: "👧", C: "🍪", H: "🏘️" };
 /* only ever accept icons from the allowed lists (also guards shared links) */
 function b2CleanSkin(obj) {
   const s = { ...B2_DEFAULT_SKIN };
@@ -119,8 +119,8 @@ function b2CleanSkin(obj) {
 /* default game text */
 const B2_DEFAULTS = {
   title: "My Maze Game",
-  intro: "Use the arrow keys or buttons to guide the robot 🤖 to the house 🏠 — collect every cookie 🍪 on the way!",
-  win: "🎉 You did it! The robot reached the house!",
+  intro: "Use the arrow keys or buttons to guide the player 👧 to the goal 🏘️ — collect every cookie 🍪 on the way!",
+  win: "🎉 You did it! The player reached the goal!",
 };
 
 /* ============================================================
@@ -132,7 +132,7 @@ const B2_DEFAULTS = {
      EVENTS (hats — hold a body):
        whenPlay              when ▶ Play is clicked
        whenKey  { dir }      when an arrow key is pressed
-       whenTouch{ tile }     when the robot touches a piece
+       whenTouch{ tile }     when the player touches a piece
      MOTION:
        move     { dir }      step one cell in a direction
      ACTIONS:
@@ -153,13 +153,13 @@ const TOUCH_TILES = [
   { key: "C", label: "🍪 cookie" },
   { key: "K", label: "🔑 key" },
   { key: "D", label: "🚪 door" },
-  { key: "H", label: "🏠 house" },
+  { key: "H", label: "🏘️ goal" },
 ];
 
 /* palette is grouped into Scratch-like color-coded categories */
 const B2_CATEGORIES = [
-  { cls: "cat-events",  label: "Events",  hint: "when something happens", blocks: ["whenPlay", "whenKey", "whenTouch"] },
-  { cls: "cat-motion",  label: "Motion",  hint: "move the robot",         blocks: ["move"] },
+  { cls: "cat-events",  label: "Events",  hint: "when something happens", blocks: ["whenKey", "whenTouch"] },
+  { cls: "cat-motion",  label: "Motion",  hint: "move the player",        blocks: ["move"] },
   { cls: "cat-actions", label: "Actions", hint: "make something happen",  blocks: ["collect", "openDoor", "win", "say"] },
   { cls: "cat-control", label: "Control", hint: "only run if it's true",  blocks: ["ifKey", "ifCookies"] },
 ];
@@ -168,7 +168,7 @@ const B2_CATEGORIES = [
 const BLOCK_DEFS = {
   whenPlay:  { cat: "events",  hat: true,  body: true,  label: "when ▶ Play clicked",   title: "when ▶ Play clicked" },
   whenKey:   { cat: "events",  hat: true,  body: true,  label: "when 🔼 arrow pressed",  title: "when arrow pressed" },
-  whenTouch: { cat: "events",  hat: true,  body: true,  label: "when robot touches…",    title: "when robot touches" },
+  whenTouch: { cat: "events",  hat: true,  body: true,  label: "when player touches…",   title: "when player touches" },
   move:      { cat: "motion",  body: false, label: "move 🔼" },
   collect:   { cat: "actions", body: false, label: "pick it up 🎒" },
   openDoor:  { cat: "actions", body: false, label: "open the door 🔓" },
@@ -382,7 +382,7 @@ function b2CellVisual(ch) {
 
 /* ---------------- Skin (themed icons) ---------------- */
 /* push the current skin into the play renderer (b2game.emoji) and the
-   robot icon (a CSS var the play robot reads) */
+   player icon (a CSS var the play renderer reads) */
 function b2ApplySkin() {
   b2game.emoji = { C: B2.skin.C, H: B2.skin.H };
   const g = document.getElementById("grid-b2");
@@ -405,7 +405,7 @@ function b2RenderLegend() {
   if (el) el.innerHTML =
     `${B2.skin.P} player &nbsp;•&nbsp; ${B2.skin.H} goal &nbsp;•&nbsp; ${B2.skin.C} item &nbsp;•&nbsp; 🔑 key &nbsp;•&nbsp; 🚪 door &nbsp;•&nbsp; 🧱 = wall`;
 }
-/* "when robot touches …" options, with the themed icons */
+/* "when player touches …" options, with the themed icons */
 function b2TouchTileOpts() {
   return [
     { key: "C", label: `${B2.skin.C} item` },
@@ -416,15 +416,26 @@ function b2TouchTileOpts() {
 }
 /* fill the icon-picker dropdowns and keep them in sync with B2.skin */
 const B2_SKIN_NAMES = {
-  "🤖": "Robot", "🤿": "Diver", "👩‍🌾": "Farmer", "🧑‍🚀": "Astronaut", "🧑‍⚕️": "Doctor", "🧑‍🚒": "Firefighter",
-  "🏠": "House", "♻️": "Recycle", "🧺": "Laundry", "🐾": "Paw", "🛰️": "Satellite", "🏥": "Hospital",
-  "🍪": "Cookie", "🥫": "Soda can", "🥕": "Carrot", "🐶": "Puppy", "💊": "Pill",
+  // ordered by theme (player, item, goal) — the single source of skin order
+  "👧": "Girl Scout",  "🍪": "Cookie",     "🏘️": "Neighborhood",    // Girl Scout
+  "🤿": "Diver",       "🥫": "Garbage",    "♻️": "Recycle",          // Ocean
+  "👩‍🌾": "Farmer",      "🥕": "Carrot",     "🧺": "Basket",           // Farmer
+  "🧑‍🚀": "Astronaut",  "⭐": "Star",       "🛰️": "Satellite",       // Astronaut
+  "🧑‍⚕️": "Doctor",     "💊": "Pill",       "🏥": "Hospital",         // Doctor
+  "🧑‍🚒": "Firefighter","💧": "Water drop", "🔥": "Fire",             // Firefighter
+  "🐶": "Puppy",       "🦴": "Bone",       "🏠": "Animal shelter",   // Dog
 };
+/* a role's icon options, always ordered to match the B2_SKIN_NAMES list so the
+   picker and the Plan-step pod show them in the same, single source of order */
+function b2OrderedSkins(role) {
+  const order = Object.keys(B2_SKIN_NAMES);
+  return B2_SKINS[role].options.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b));
+}
 function b2RenderSkinSelectors() {
   Object.keys(B2_SKINS).forEach((role) => {
     const sel = document.getElementById(`b2-skin-${role}`);
     if (!sel) return;
-    sel.innerHTML = B2_SKINS[role].options
+    sel.innerHTML = b2OrderedSkins(role)
       .map((e) => `<option value="${e}" title="${B2_SKIN_NAMES[e] || e}"${e === B2.skin[role] ? " selected" : ""}>${e}</option>`).join("");
     sel.value = B2.skin[role];
   });
@@ -449,7 +460,7 @@ function b2OnSkinChange() {
   b2RenderSkinSelectors();
   b2RefreshPaletteLabels();
   if (!B2.fromShared) b2RenderEditor();
-  b2RenderScripts();   // refresh the "when robot touches …" labels on placed blocks
+  b2RenderScripts();   // refresh the "when player touches …" labels on placed blocks
   B2_SESSION.saveSkin();
 }
 
@@ -474,7 +485,7 @@ function b2FitGrid() {
     const above = wrap.getBoundingClientRect().top - podR.top;
     const below = document.body.classList.contains("b2-embed")
       ? podR.bottom - wrap.getBoundingClientRect().bottom + 6
-      : 110;
+      : 70;
     hBudget = window.innerHeight - headH - above - below;
   }
   const hCell = Math.floor((hBudget - (B2.model.rows + 1) * gap) / B2.model.rows);
@@ -510,11 +521,11 @@ function b2Paint(x, y) {
   const here = grid[y][x];
   switch (B2.tool) {
     case "wall":
-      if (here === "P" || here === "H") { b2Msg("bad", "Move the 🤖 robot or 🏠 house before drawing a wall there."); return; }
+      if (here === "P" || here === "H") { b2Msg("bad", `Move the ${B2.skin.P} player or ${B2.skin.H} goal before drawing a wall there.`); return; }
       grid[y][x] = "#"; break;
     case "erase": grid[y][x] = "."; break;
     case "cookie": case "key": case "door":
-      if (here === "P" || here === "H") { b2Msg("bad", "That square has the 🤖 robot or 🏠 house on it."); return; }
+      if (here === "P" || here === "H") { b2Msg("bad", `That square has the ${B2.skin.P} player or ${B2.skin.H} goal on it.`); return; }
       grid[y][x] = { cookie: "C", key: "K", door: "D" }[B2.tool]; break;
     case "robot": {
       const old = b2FindChar(grid, "P"); if (old) grid[old.y][old.x] = ".";
@@ -583,9 +594,9 @@ function b2SyncLevel() {
 /* ============================================================
    Script engine — runs the player's event scripts.
    Drivers: a key press fires matching "when … pressed" hats; the
-   move action fires "when robot touches …" hats for the tile it
+   move action fires "when player touches …" hats for the tile it
    meets.  Door tiles are bumped (their touch script may
-   clear them before the robot enters); cookie / key / house tiles
+   clear them before the player enters); cookie / key / house tiles
    are stepped onto first, then their touch script fires.
    ============================================================ */
 let b2ctx = null;    // { tx, ty, dx, dy } — the touched cell, for actions
@@ -645,7 +656,7 @@ function b2DoMove(dir) {
   return "ok";
 }
 
-/* fire every "when robot touches <tile>" hat with the touched cell in context */
+/* fire every "when player touches <tile>" hat with the touched cell in context */
 function b2RunTouch(tile, tx, ty, dx, dy) {
   const prev = b2ctx;
   b2ctx = { tx, ty, dx, dy };
@@ -689,8 +700,8 @@ function b2DoOpenDoor() {
    Arrow-key / D-pad player
    ============================================================ */
 function b2PlayerStart() {
-  if (!b2FindChar(B2.model.grid, "P")) { b2Msg("bad", "Add a 🤖 robot start — pick the Robot tool and place one!"); return; }
-  if (!b2FindChar(B2.model.grid, "H")) { b2Msg("bad", "Add a 🏠 house — pick the House tool and place one!"); return; }
+  if (!b2FindChar(B2.model.grid, "P")) { b2Msg("bad", `Add a ${B2.skin.P} player start — pick the Player tool and place one!`); return; }
+  if (!b2FindChar(B2.model.grid, "H")) { b2Msg("bad", `Add a ${B2.skin.H} goal — pick the Goal tool and place one!`); return; }
 
   if (!B2.fromShared) B2.settings = b2ReadSettings(); // shared/embed keeps the creator's title/text
   b2SyncLevel();
@@ -706,10 +717,11 @@ function b2PlayerStart() {
   b2SetDesignDisabled(true);
   b2SetPlayButtons(true);
 
-  // show the right input (on-screen arrows for touch, keyboard otherwise) and
-  // the HUD *before* sizing, so the maze fits with them visible — no scrolling.
+  // Always show the on-screen arrow pad during play — it's the only way to move
+  // on a touch device (iPad), and it sits happily alongside the keyboard on a
+  // laptop. Shown *before* sizing so the maze fits with it visible — no scrolling.
   const dpad = document.getElementById("b2-dpad");
-  if (dpad) dpad.hidden = !b2UsesTouch();
+  if (dpad) dpad.hidden = false;
   b2UpdateHud();
 
   renderGrid(b2game); // builds the grid and sizes it to fit
@@ -944,7 +956,7 @@ function b2BlockFace(block, container) {
   switch (block.type) {
     case "whenPlay":  txt("when ▶ Play is clicked"); break;
     case "whenKey":   txt("when"); sel(DIR_OPTS, block.dir, (v) => (block.dir = v)); txt("arrow pressed (key or arrow pad)"); break;
-    case "whenTouch": txt("when the robot touches a"); sel(b2TouchTileOpts(), block.tile, (v) => (block.tile = v)); break;
+    case "whenTouch": txt("when the player touches a"); sel(b2TouchTileOpts(), block.tile, (v) => (block.tile = v)); break;
     case "move":      txt("move"); sel(DIR_OPTS, block.dir, (v) => (block.dir = v)); break;
     case "collect":   txt("pick it up 🎒"); break;
     case "openDoor":  txt("open the door 🔓"); break;
@@ -1199,11 +1211,12 @@ function b2BuildExplore() {
   return `
     <div class="level-head"><h2>Step 2 — Explore</h2></div>
     <div class="b2-intro-card b2-prose">
-      <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>. Here's how each one shows up in a game:</p>
-      <p style="margin-top:16px;">📋 <strong>Sequence</strong> means doing things in the right order. A game runs your steps one after another, exactly as you set them up — just like putting the robot's commands in order in Badge 1.</p>
-      <p>🔁 <strong>Loops</strong> repeat things again and again. Games are full of loops: an enemy patrols back and forth, a timer counts down, and the player keeps trying until they win — just like the <em>Repeat</em> block in Badge 1.</p>
-      <p>❓ <strong>Conditionals</strong> let the game make choices with <em>IF</em>. <em>IF the robot has a key, THEN the door opens. IF every cookie is collected, THEN the player wins.</em> Without conditionals, every situation would be the same — pretty boring!</p>
-      <div class="b2-callout">You'll build your game with these same three ideas from Badge 1 — <strong>sequence, loops, and conditionals</strong> — by snapping blocks together. Then a friend uses the <strong>arrow keys</strong> to play. That's exactly how real game design works!</div>
+      <p>Making a video game uses the same three big ideas you learned in <strong>Badge 1</strong>: <strong>sequence</strong>, <strong>loops</strong>, and <strong>conditionals</strong>.</p>
+      <div class="b2-defs">
+        <p>📋 <strong>Sequence</strong> — doing things in the right order.</p>
+        <p>🔁 <strong>Loops</strong> — repeating something again and again.</p>
+        <p>❓ <strong>Conditionals</strong> — making choices with <em>IF</em>.</p>
+      </div>
       <div class="b2-reflect">
         <label for="b2-r-game">✏️ What is your favorite video game?</label>
         <textarea id="b2-r-game" rows="1" placeholder="My favorite game is…"></textarea>
@@ -1222,6 +1235,20 @@ function b2BuildExplore() {
       </div>
       <button class="btn btn-primary" data-b2goto="b2-plan">Next: Plan your game →</button>
     </div>`;
+}
+
+/* Plan-step icon-options pod: each customizable piece (Player/Item/Goal) with
+   all of its emoji choices, generated from B2_SKINS so it stays in sync. */
+function b2PlanSkinOptionsHTML() {
+  return Object.keys(B2_SKINS).map((role) => {
+    const { label } = B2_SKINS[role];
+    const chips = b2OrderedSkins(role).map((e) => `<span class="b2-peek-skin" title="${B2_SKIN_NAMES[e] || ""}">${e}</span>`).join("");
+    return `<li class="b2-peek-piece">
+      <div class="b2-peek-piece-body"><b>${label}</b>
+        <div class="b2-peek-skins">${chips}</div>
+      </div>
+    </li>`;
+  }).join("");
 }
 
 /* Plan step "peek" reference — plain text/emoji, generated from the real
@@ -1255,7 +1282,7 @@ function b2PlanPeekBlocksHTML() {
       <div class="b2-peek-group-head">${dot} ${label}</div>
       <div class="b2-peek-chips">${chips.map((c) => `<span class="b2-peek-chip">${c}</span>`).join("")}</div>
     </div>`;
-  const events  = ["when ▶ Play clicked", `when arrow pressed ${dirArrows}`, `when robot touches ${touchIcons}`];
+  const events  = [`when arrow pressed ${dirArrows}`, `when player touches ${touchIcons}`];
   const motion  = DIR_LIST.map((d) => `move ${DIR_LABEL[d]}`);
   const actions = B2_CATEGORIES.find((c) => c.cls === "cat-actions").blocks.map((t) => BLOCK_DEFS[t].label);
   const control = B2_CATEGORIES.find((c) => c.cls === "cat-control").blocks.map((t) => b2PaletteLabel(t));
@@ -1269,29 +1296,34 @@ function b2BuildPlan() {
   return `
     <div class="level-head"><h2>Step 3 — Plan</h2></div>
     <div class="b2-intro-card b2-prose">
-      <p>Game makers <strong>plan</strong> before they build. That's part of the <em>game design process</em>: plan → build → test → improve → share. Use the reference below, then fill in your plan — you'll use it in the next step!</p>
+      <p>Before you build, take a minute to <strong>plan</strong> — real game designers always do! Just jot down your ideas below. You'll use them in the next step.</p>
 
-      <p>Here's what you're making: a maze that a robot (or whatever character you pick) explores one step at a time.</p>
-      <ul class="b2-plan-summary">
-        <li>You draw the maze and decide what's in it — items to grab, keys, and locked doors.</li>
-        <li>You write simple snap-together rules, like <em>WHEN the robot touches the cookie → pick it up</em>, that decide what each piece does.</li>
-        <li>Then you hand your device to another Girl Scout, who <strong>playtests</strong> your game with just the arrow keys — no coding needed to play.</li>
-        <li>You use her feedback to <strong>improve</strong> your maze, and test again — that's <em>iteration</em>! Keep going until it's just right.</li>
-      </ul>
+      <details class="b2-guide b2-plan-peek">
+        <summary>👀 Peek at what you'll build — tap to open</summary>
+        <div class="b2-plan-peek-body b2-plan-peek-simple">
+          <p>You're going to make a <strong>maze game</strong>: a player moves through a maze to reach a goal, and a friend plays it using just the arrow keys.</p>
+          <hr class="b2-plan-sep">
+          <p class="b2-plan-steps-intro">In the next step, here's what you'll do:</p>
+          <ol class="b2-plan-steps">
+            <li>🧱 Draw the walls, then add 🍪 items, 🔑 keys, and 🚪 doors.</li>
+            <li>🎨 Pick your own emoji for the player, item, and goal.</li>
+            <li>🧩 Snap blocks together to make rules — like <em>when the player touches 🍪 → pick it up</em>.</li>
+          </ol>
+        </div>
+      </details>
 
-      <details class="b2-guide b2-plan-peek" open>
-        <summary>🗺️ What you'll be able to build — tap to expand/collapse</summary>
-        <div class="b2-plan-peek-body">
-          <div class="b2-plan-peek-col">
-            <h4>Maze pieces</h4>
-            <ul class="b2-plan-piece-list">${b2PlanPeekPiecesHTML()}</ul>
-            <p class="b2-plan-peek-note">You can also pick different emoji for the player, item, and goal to match your game's theme (ocean, garden, space, and more).</p>
-          </div>
-          <div class="b2-plan-peek-col">
-            <h4>Code blocks</h4>
-            <div class="b2-peek-groups">${b2PlanPeekBlocksHTML()}</div>
-            <p class="b2-plan-peek-note">Blocks snap together like puzzle pieces. You'll drag them in the next step.</p>
-          </div>
+      <details class="b2-guide b2-plan-peek">
+        <summary>🤔 How is this different from Badge 1? — tap to open</summary>
+        <div class="b2-plan-peek-body b2-plan-peek-simple">
+          <p>In Badge 1 you programmed the <em>robot's moves</em> — setting the exact steps, one by one (move forward → turn right → …), to get through the maze. This time <em>you're the game designer</em>: instead of the moves, you program the <em>rules and controls</em> — what the pieces do and what happens as someone plays.</p>
+        </div>
+      </details>
+
+      <details class="b2-guide b2-plan-peek">
+        <summary>🎨 Choose your look — tap to see the icon options</summary>
+        <div class="b2-plan-peek-body b2-plan-peek-simple">
+          <p>In the Build step you can dress up three pieces to match your game's theme — space, garden, ocean, hospital, and more. Here are the choices:</p>
+          <ul class="b2-plan-piece-list">${b2PlanSkinOptionsHTML()}</ul>
         </div>
       </details>
 
@@ -1341,25 +1373,27 @@ function b2BuildBuild() {
         <div class="b2-guide-col">
           <h4>🧩 Maze pieces</h4>
           <ul>
-            <li><span class="b2-guide-ico">🤖</span><div><b>Robot</b> — the player. Moves with the arrow keys.</div></li>
-            <li><span class="b2-guide-ico">🏠</span><div><b>House</b> — the goal. A <b>when robot touches 🏠</b> script decides when reaching it wins.</div></li>
-            <li><span class="b2-guide-ico">🍪</span><div><b>Cookie</b> — a <b>when robot touches 🍪 → pick it up</b> script collects it.</div></li>
-            <li><span class="b2-guide-ico">🔑</span><div><b>Key</b> — collect it so the robot can open doors.</div></li>
-            <li><span class="b2-guide-ico">🚪</span><div><b>Door</b> — an <b>open the door</b> script opens it when the robot has a key.</div></li>
+            <li><span class="b2-guide-ico">👧</span><div><b>Player</b> — moves with the arrow keys or the on-screen arrow pad.</div></li>
+            <li><span class="b2-guide-ico">🏘️</span><div><b>Goal</b> — where the player is trying to reach. A <b>when player touches 🏘️</b> script decides when reaching it wins.</div></li>
+            <li><span class="b2-guide-ico">🍪</span><div><b>Cookie</b> — a <b>when player touches 🍪 → pick it up</b> script collects it.</div></li>
+            <li><span class="b2-guide-ico">🔑</span><div><b>Key</b> — collect it so the player can open doors.</div></li>
+            <li><span class="b2-guide-ico">🚪</span><div><b>Door</b> — an <b>open the door</b> script opens it when the player has a key.</div></li>
             <li><span class="b2-guide-ico">🧱</span><div><b>Wall</b> — always solid, no script needed.</div></li>
           </ul>
         </div>
         <div class="b2-guide-col">
           <h4>🧩 How code blocks work</h4>
-          <p style="font-size:0.9rem; margin:0 0 8px;">Snap blocks under an <b>event</b> "hat" — when the event happens, the blocks underneath run in order:</p>
           <ul>
-            <li><span class="b2-guide-ico">🟡</span><div><b>Events</b> — <i>when ▶ Play clicked</i>, <i>when an arrow is pressed</i> (keyboard or the arrow pad), <i>when the robot touches</i> a piece.</div></li>
+            <li><span class="b2-guide-ico">🟡</span><div><b>Events</b> — <i>when an arrow is pressed</i> (keyboard or the arrow pad), <i>when the player touches</i> a piece.</div></li>
             <li><span class="b2-guide-ico">🔵</span><div><b>Motion</b> — <i>move up / down / left / right</i>.</div></li>
             <li><span class="b2-guide-ico">🟣</span><div><b>Actions</b> — <i>pick it up</i>, <i>open the door</i>, <i>win the game</i>, <i>show message</i>.</div></li>
             <li><span class="b2-guide-ico">🟠</span><div><b>Control</b> — <i>if carrying a key</i>, <i>if all cookies collected</i> — put blocks inside to run them only when it's true.</div></li>
           </ul>
-          <p style="font-size:0.85rem; color:#6b5d7d; margin-top:6px;">Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door stays solid like a wall. Remove a block with the eraser.</p>
         </div>
+      </div>
+      <div class="b2-guide-foot">
+        <p>Snap blocks under an <b>event</b> "hat" — when the event happens, the blocks underneath run in order.</p>
+        <p>Your script area starts empty — drag an <b>Event</b> block in first, then snap actions underneath it. No script for a piece? Then a 🚪 door stays solid like a wall. Remove a block with the eraser.</p>
       </div>
     </details>
 
@@ -1372,7 +1406,7 @@ function b2BuildBuild() {
         <h3>Game settings</h3>
         <div class="b2-form b2-settings-grid">
           <div class="field"><label for="b2-title">Title</label><input type="text" id="b2-title" placeholder="${B2_DEFAULTS.title}" /></div>
-          <div class="field"><label for="b2-intro">Start message</label><textarea id="b2-intro" rows="2" placeholder="${B2_DEFAULTS.intro}"></textarea></div>
+          <div class="field"><label for="b2-intro">Instructions</label><textarea id="b2-intro" rows="2" placeholder="${B2_DEFAULTS.intro}"></textarea></div>
           <div class="field"><label for="b2-win">Win message</label><textarea id="b2-win" rows="2" placeholder="${B2_DEFAULTS.win}"></textarea></div>
         </div>
       </div>
@@ -1404,7 +1438,6 @@ function b2BuildBuild() {
           <button class="btn btn-run" id="b2-play">▶ Play</button>
           <button class="btn" id="b2-stop" disabled>⏹ Stop</button>
         </div>
-        <div class="run-msg info" id="msg-b2">Draw a maze, set your rules, then press ▶ Play!</div>
         <div class="b2-dpad-wrap">
           <div class="b2-dpad" id="b2-dpad" hidden tabindex="0">
             <button class="dpad-btn dpad-up"    data-b2dir="0,-1">▲</button>
@@ -1463,7 +1496,7 @@ function b2BuildShare() {
       <div class="b2-embed-wrap">
         <iframe id="b2-embed-frame" class="b2-embed-frame" title="Play the game here"></iframe>
       </div>
-      <p class="b2-embed-empty" id="b2-embed-empty" hidden>Add a 🤖 player start and a 🏠 goal in the <strong>Build</strong> step, then come back to play the game here.</p>
+      <p class="b2-embed-empty" id="b2-embed-empty" hidden>Add a 👧 player start and a 🏘️ goal in the <strong>Build</strong> step, then come back to play the game here.</p>
 
       <div class="b2-tester-panel">
         <h3>👋 Playtester feedback</h3>
@@ -1521,7 +1554,7 @@ function b2BuildFinish() {
       <div class="b2-embed-wrap">
         <iframe id="b2-finish-frame" class="b2-embed-frame" scrolling="no" title="Your finished game — play it here"></iframe>
       </div>
-      <p class="b2-embed-empty" id="b2-finish-empty" hidden>Add a 🤖 player start and a 🏠 goal in the <strong>Build</strong> step, then come back to play your game here.</p>
+      <p class="b2-embed-empty" id="b2-finish-empty" hidden>Add a 👧 player start and a 🏘️ goal in the <strong>Build</strong> step, then come back to play your game here.</p>
 
       <hr class="b2-finish-divider" />
       <h3 style="color:var(--purple);">📜 Your certificate</h3>
@@ -1545,11 +1578,11 @@ function b2BuildFinish() {
    ============================================================ */
 const B2_TABS = [
   { target: "b2-welcome",  num: "▶", label: "Start",   build: b2BuildWelcome  },
-  { target: "b2-discover", num: "1",  label: "Discover", build: b2BuildDiscover, mins: 8  },
-  { target: "b2-explore",  num: "2",  label: "Explore",  build: b2BuildExplore,  mins: 8  },
-  { target: "b2-plan",     num: "3",  label: "Plan",     build: b2BuildPlan,     mins: 10 },
-  { target: "b2-build",    num: "4",  label: "Build",    build: b2BuildBuild,    mins: 15 },
-  { target: "b2-share",    num: "5",  label: "Share",    build: b2BuildShare,    mins: 8  },
+  { target: "b2-discover", num: "1",  label: "Discover", build: b2BuildDiscover },
+  { target: "b2-explore",  num: "2",  label: "Explore",  build: b2BuildExplore  },
+  { target: "b2-plan",     num: "3",  label: "Plan",     build: b2BuildPlan     },
+  { target: "b2-build",    num: "4",  label: "Build",    build: b2BuildBuild    },
+  { target: "b2-share",    num: "5",  label: "Share",    build: b2BuildShare    },
   { target: "b2-finish",   num: "🏆", label: "Finish",   build: b2BuildFinish   },
 ];
 
@@ -1704,7 +1737,7 @@ function b2BlockPhrase(b) {
     case "whenKey":   return "when an arrow key is pressed";
     case "whenTouch": {
       const t = { C: `${B2.skin.C} item`, K: "🔑 key", D: "🚪 door", H: `${B2.skin.H} goal`, P: "start" }[b.tile] || "something";
-      return `when the robot touches the ${t}`;
+      return `when the player touches the ${t}`;
     }
     case "move":      return "move";
     case "collect":   return "pick it up 🎒";
@@ -1855,7 +1888,7 @@ function b2RenderCertificate() {
       </div>
     </div>
     <div class="b2-cert-msgs">
-      <p><b>Start message:</b> ${b2Esc(d.intro)}</p>
+      <p><b>Instructions:</b> ${b2Esc(d.intro)}</p>
       <p><b>Win message:</b> ${b2Esc(d.win)}</p>
     </div>
 
@@ -2077,8 +2110,7 @@ function b2Init() {
     tab.className = "tab";
     tab.dataset.target = t.target;
     tab.dataset.badge  = "2";
-    tab.innerHTML = `<span class="tab-num">${t.num}</span> ${t.label}` +
-      (t.mins ? ` <span class="tab-time">~${t.mins}m</span>` : "");
+    tab.innerHTML = `<span class="tab-num">${t.num}</span> ${t.label}`;
     tab.addEventListener("click", () => showPanel(t.target));
     tabsNav.appendChild(tab);
 
@@ -2086,12 +2118,6 @@ function b2Init() {
     section.id        = t.target;
     section.className = "panel";
     section.innerHTML = t.build();
-    // time-box each step: show a suggested duration in its header
-    if (t.mins) {
-      const head = section.querySelector(".level-head");
-      if (head) head.insertAdjacentHTML("beforeend",
-        `<div class="b2-time-box">⏱ about ${t.mins} min</div>`);
-    }
     main.appendChild(section);
   });
 
