@@ -706,10 +706,11 @@ function b2PlayerStart() {
   b2SetDesignDisabled(true);
   b2SetPlayButtons(true);
 
-  // show the right input (on-screen arrows for touch, keyboard otherwise) and
-  // the HUD *before* sizing, so the maze fits with them visible — no scrolling.
+  // Always show the on-screen arrow pad during play — it's the only way to move
+  // on a touch device (iPad), and it sits happily alongside the keyboard on a
+  // laptop. Shown *before* sizing so the maze fits with it visible — no scrolling.
   const dpad = document.getElementById("b2-dpad");
-  if (dpad) dpad.hidden = !b2UsesTouch();
+  if (dpad) dpad.hidden = false;
   b2UpdateHud();
 
   renderGrid(b2game); // builds the grid and sizes it to fit
