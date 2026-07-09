@@ -639,6 +639,19 @@ body.view-badge-2 .welcome-card { max-width: 1080px; }
   border-radius: 11px;
 }
 .b2-block > .block-head { font-weight: 800; color: #3a2c4a; font-size: 0.95rem; }
+/* Purple round ✕ on blocks that have a body (Events/Control), matching the
+   ✕ that the simple Motion/Actions chips already get from .cmd-chip .remove */
+.b2-block .block-head .remove {
+  border: none;
+  background: #e7d2f0;
+  color: var(--purple);
+  border-radius: 50%;
+  width: 22px; height: 22px;
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 1;
+}
+.b2-block .block-head .remove:hover { background: #f3c2c2; color: #b32d2d; }
 .b2-block.b2-hat {
   border-top-left-radius: 18px;
   border-top-right-radius: 18px;
